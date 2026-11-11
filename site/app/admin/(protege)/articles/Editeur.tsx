@@ -1,11 +1,14 @@
 "use client";
 
+import Image from "@tiptap/extension-image";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { useId, useState } from "react";
+import { PanneauImage } from "./PanneauImage";
 
 // Éditeur visuel des articles (D-20), chargé uniquement dans l'administration.
 // Extensions limitées à la spec : paragraphe, intertitres h2/h3, gras, italique, listes,
-// citation, lien (l'image arrive avec T10). Le HTML public n'est PAS celui de l'éditeur :
+// citation, lien, image (T10 : envoyée au site, description obligatoire). Le HTML public n'est PAS celui de l'éditeur :
 // le serveur le refabrique depuis le JSON (lib/articles/rendu.ts).
 
 const PROTOCOLES_LIENS = ["http", "https", "mailto"];
@@ -45,6 +48,9 @@ export function Editeur({ contenuInitial, onChange, idEtiquette }: Props) {
             defaultValidate(url) && (/^(https?:|mailto:)/i.test(url) || /^\/(?!\/)/.test(url)),
         },
       }),
+      // Images du site seulement (/images/<clé>), jamais en base64 ni venant d'ailleurs ; le rendu
+      // public les filtre de nouveau (lib/articles/rendu.ts).
+      Image.configure({ inline: false, allowBase64: false }),
     ],
     content: lireInitial(contenuInitial),
     editorProps: {
@@ -58,15 +64,24 @@ export function Editeur({ contenuInitial, onChange, idEtiquette }: Props) {
     onUpdate: ({ editor }) => onChange(JSON.stringify(editor.getJSON())),
   });
 
+  const idPanneau = useId();
+  const [panneauImage, setPanneauImage] = useState(false);
+
   return (
     <div className="editeur">
-      {editeur && <BarreOutils editeur={editeur} />}
+      {editeur && (
+        <BarreOutils editeur={editeur} panneauImage={panneauImage} idPanneau={idPanneau}
+          basculerImage={() => setPanneauImage((ouvert) => !ouvert)} />
+      )}
+      {editeur && panneauImage && <PanneauImage editeur={editeur} idPanneau={idPanneau} fermer={() => setPanneauImage(false)} />}
       <EditorContent editor={editeur} />
     </div>
   );
 }
 
-function BarreOutils({ editeur }: { editeur: Editor }) {
+type PropsBarre = { editeur: Editor; panneauImage: boolean; idPanneau: string; basculerImage: () => void };
+
+function BarreOutils({ editeur, panneauImage, idPanneau, basculerImage }: PropsBarre) {
   // Se met à jour quand la sélection change (bouton « actif » sous le curseur).
   const etat = useEditorState({
     editor: editeur,
@@ -108,6 +123,9 @@ function BarreOutils({ editeur }: { editeur: Editor }) {
       {bouton("Liste numérotée", etat.numeros, () => editeur.chain().focus().toggleOrderedList().run())}
       {bouton("Citation", etat.citation, () => editeur.chain().focus().toggleBlockquote().run())}
       {bouton(etat.lien ? "Retirer le lien" : "Lien", etat.lien, lien)}
+      <button type="button" className="editeur-bouton" aria-expanded={panneauImage} aria-controls={idPanneau} onClick={basculerImage}>
+        Image
+      </button>
     </div>
   );
 }

@@ -7,6 +7,8 @@
 //   npm run instantane                         démarre wrangler dev (port 8793), fige, arrête
 //   npm run instantane -- --serveur <origine>  utilise un serveur déjà lancé (tests E2E)
 //   npm run instantane -- --nettoyer           retire l'instantané précédent, sans rien figer
+//   … --images-depuis <origine>                prend les images sur le site en ligne (GitHub Action :
+//                                              la copie locale de la base n'a pas les images, D-22)
 //
 // Le journal n'affiche que des adresses publiques : il est lisible par tous dans les Actions.
 
@@ -14,7 +16,12 @@ import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_pr
 import { existsSync, mkdirSync, readFileSync, rmSync, rmdirSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { MARQUE, adressesPubliques, cheminFichier, marquerHtml, verifierHtml, type LigneInstantane } from "../lib/publication/adresses.ts";
+import {
+  ENTETES_STATIQUES, MARQUE, adressesPubliques, cheminFichier, cheminFichierImage, imagesCitees, marquerHtml, origineImagesValide,
+  verifierHtml,
+  type LigneInstantane,
+} from "../lib/publication/adresses.ts";
+import { analyserImage } from "../lib/images.ts";
 
 const racine = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const wrangler = join(racine, "node_modules", "wrangler", "bin", "wrangler.js");
@@ -93,9 +100,12 @@ async function attendre(origine: string, condition: (html: string, statut: numbe
   throw new Error(`Délai dépassé : ${quoi}`);
 }
 
-async function figer(origine: string): Promise<{ fichier: string; html: string }[]> {
+type Fichier = { fichier: string; contenu: string | Uint8Array };
+
+async function figer(origine: string, origineImages: string): Promise<{ pages: Fichier[]; images: Fichier[] }> {
   const date = new Date().toISOString();
-  const pages: { fichier: string; html: string }[] = [];
+  const pages: Fichier[] = [];
+  const citees = new Set<string>();
   for (const adresse of adressesPubliques(lireLignes())) {
     const reponse = await fetch(`${origine}${adresse}`, { redirect: "manual" });
     if (reponse.status !== 200) throw new Error(`${adresse} répond ${reponse.status} au lieu de 200`);
@@ -104,10 +114,25 @@ async function figer(origine: string): Promise<{ fichier: string; html: string }
     verifierHtml(adresse, html);
     if (html.includes(`name="${MARQUE}"`)) throw new Error(`${adresse} vient déjà d'un instantané, pas du Worker`);
     const fichier = cheminFichier(adresse);
-    pages.push({ fichier, html: marquerHtml(html, date) });
+    pages.push({ fichier, contenu: marquerHtml(html, date) });
+    for (const src of imagesCitees(html)) citees.add(src);
     journal(`${adresse} → ${fichier}`);
   }
-  return pages;
+
+  // Images citées par les pages figées (T10) : servies elles aussi en fichiers, avec un cache d'un an.
+  const images: Fichier[] = [];
+  for (const src of citees) {
+    const reponse = await fetch(`${origineImages}${src}`, { redirect: "manual" });
+    if (reponse.status !== 200) throw new Error(`${src} répond ${reponse.status} au lieu de 200`);
+    if (!/^image\/(webp|jpeg)$/.test(reponse.headers.get("content-type") ?? "")) throw new Error(`${src} n'est pas une image du site`);
+    const octets = new Uint8Array(await reponse.arrayBuffer());
+    const analyse = analyserImage(octets); // même contrôle qu'à l'envoi : rien d'autre n'est figé
+    if (!analyse.ok) throw new Error(`${src} : ${analyse.raison}`);
+    const fichier = cheminFichierImage(src);
+    images.push({ fichier, contenu: octets });
+    journal(`${src} → ${fichier}`);
+  }
+  return { pages, images };
 }
 
 async function principal(): Promise<void> {
@@ -124,26 +149,35 @@ async function principal(): Promise<void> {
     throw new Error("--serveur attend une origine locale, par exemple http://127.0.0.1:8791");
   }
   const origine = externe ?? `http://127.0.0.1:${PORT}`;
+  const j = args.indexOf("--images-depuis");
+  const origineImages = j >= 0 ? (args[j + 1] ?? "") : origine;
+  if (!origineImagesValide(origineImages)) {
+    throw new Error("--images-depuis attend l'adresse du site en ligne (https://…) ou un serveur local de test");
+  }
   const serveur = externe ? undefined : demarrerServeur();
 
-  let pages: { fichier: string; html: string }[];
+  let figes: { pages: Fichier[]; images: Fichier[] };
   try {
     // Le serveur doit répondre, et plus avec un ancien instantané (il recharge les assets).
     await attendre(origine, (html, statut) => statut === 200 && !html.includes(`name="${MARQUE}"`), "le serveur ne répond pas");
-    pages = await figer(origine);
+    figes = await figer(origine, origineImages);
   } finally {
     if (serveur) arreterServeur(serveur);
   }
 
   // Écriture à la fin seulement : un serveur qui surveille les assets ne recharge qu'une fois,
   // et une erreur en cours de route ne laisse pas un instantané à moitié fait.
-  for (const { fichier, html } of pages) {
+  const { pages, images } = figes;
+  const fichiers = [...pages, ...images];
+  if (images.length > 0) fichiers.push({ fichier: "_headers", contenu: ENTETES_STATIQUES });
+  for (const { fichier, contenu } of fichiers) {
     const chemin = dansAssets(fichier);
     mkdirSync(dirname(chemin), { recursive: true });
-    writeFileSync(chemin, html, "utf8");
+    writeFileSync(chemin, contenu);
   }
-  writeFileSync(manifeste, JSON.stringify(pages.map((p) => p.fichier), null, 2), "utf8");
+  writeFileSync(manifeste, JSON.stringify(fichiers.map((f) => f.fichier), null, 2), "utf8");
   journal(`${pages.length} page(s) écrite(s) dans ${relative(racine, assets)}`);
+  if (images.length > 0) journal(`${images.length} image(s) figée(s), cache d'un an (_headers)`);
 }
 
 principal().catch((erreur: unknown) => {

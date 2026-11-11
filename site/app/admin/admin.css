@@ -135,3 +135,15 @@ a.liste-titre:focus-visible { outline: 2px solid var(--olive); outline-offset: 3
 .etat-site[data-etat="echouee"] p { color: #8A2F14; }
 .etat-site .bouton-secondaire { padding: 0.7rem 1.1rem; font-size: 0.95rem; }
 .etat-site :focus-visible { outline: 2px solid var(--olive); outline-offset: 3px; }
+
+/* ---------- Images dans l'éditeur (T10) ---------- */
+.panneau-image { display: grid; gap: 1rem; padding: 1rem 1.1rem; border-bottom: 1px solid var(--filet); background: #FFFDF8; }
+.panneau-titre { margin: 0; font-weight: 500; }
+.panneau-image input[type="file"] { padding: 0.6rem; background: var(--papier); }
+.editeur-bouton[aria-expanded="true"] { background: var(--olive-fonce); color: var(--papier); }
+.editeur-zone img { display: block; max-width: 100%; height: auto; margin: 1rem 0; }
+.editeur-zone img.ProseMirror-selectednode { outline: 3px solid var(--olive); outline-offset: 2px; }
+.panneau-image input[type="file"]::file-selector-button {
+  font: 500 0.95rem/1.2 var(--texte); padding: 0.5rem 0.85rem; margin-right: 0.75rem; cursor: pointer;
+  background: transparent; color: var(--olive-fonce); border: 1px solid var(--olive-fonce); border-radius: 2px;
+}
