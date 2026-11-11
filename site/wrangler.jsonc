@@ -1,0 +1,41 @@
+{
+	// Natur'Océ — Worker Cloudflare (Next.js via OpenNext). Voir CLAUDE.md, D-17 du CDC.
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "natur-oce",
+	"compatibility_date": "2026-11-01",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			// Auto-référence exigée par OpenNext : le nom doit être celui du Worker
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "natur-oce"
+		}
+	],
+	"d1_databases": [
+		{
+			// Base du site (articles, tarifs…). Schéma : lib/db/schema.ts, migrations : drizzle/.
+			"binding": "DB",
+			"database_name": "natur-oce",
+			// Base distante créée le 10/11/2026 (région WEUR) avec l'accord de Dylan.
+			"database_id": "810efb80-e0fe-47f3-bd0d-5a9e0c14dead",
+			"migrations_dir": "drizzle"
+		}
+	],
+	"send_email": [
+		{
+			// E-mails du site, tous vers Océane (lien de connexion, demandes de séance) — D-19.
+			// Pas d'adresse ici : elle ne doit pas être dans le dépôt. Elle vient du secret
+			// ADMIN_EMAIL, et l'offre gratuite de Cloudflare n'envoie de toute façon qu'aux
+			// adresses vérifiées dans Email Routing : c'est ce verrou qui protège en production.
+			"name": "EMAIL"
+		}
+	]
+	// À venir : bucket R2 (images, T10).
+	// Pas de binding "images" : l'optimisation Cloudflare Images est facturée au-delà d'un quota ;
+	// les images sont redimensionnées à l'avance (RSE-01).
+}

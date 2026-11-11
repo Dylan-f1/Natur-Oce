@@ -1,0 +1,7 @@
+# Variables locales pour `wrangler dev` (copier en .dev.vars, jamais commité).
+# Adresse fictive en local : la vraie adresse Outlook d'Océane est un secret Cloudflare
+# (`wrangler secret put ADMIN_EMAIL`, avec accord de Dylan).
+ADMIN_EMAIL=oceane@exemple.test
+# Secret de signature des sessions Better Auth : 32 octets aléatoires, différent en production
+# (`node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`).
+BETTER_AUTH_SECRET=a-generer
