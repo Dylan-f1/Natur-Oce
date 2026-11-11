@@ -1,4 +1,4 @@
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { creerSlug, slugPourEnregistrement } from "@/lib/articles/slug";
 import { db } from "./index";
 import { article, categorie, type Categorie } from "./schema";
@@ -31,6 +31,53 @@ export async function listerArticlesAdmin(): Promise<LigneArticleAdmin[]> {
     .from(article)
     .leftJoin(categorie, eq(article.categorieId, categorie.id))
     .orderBy(sql`CASE ${article.statut} WHEN 'brouillon' THEN 0 ELSE 1 END`, desc(article.modifieLe));
+}
+
+// ---------------------------------------------------------------------------------------------
+// Site public (T8) : seuls les articles publiés sortent d'ici.
+
+export type ArticlePublic = {
+  slug: string;
+  titre: string;
+  resume: string;
+  categorie: string | null;
+  categorieSlug: string | null;
+  publieLe: number;
+};
+
+export type ArticleComplet = ArticlePublic & { contenuHtml: string; modifieLe: number };
+
+const colonnesPubliques = {
+  slug: article.slug,
+  titre: article.titre,
+  resume: article.resume,
+  categorie: categorie.nom,
+  categorieSlug: categorie.slug,
+  publieLe: article.publieLe,
+};
+
+/** Articles publiés, du plus récent au plus ancien (EF-06). `limite` pour l'accueil. */
+export async function listerArticlesPublies(limite?: number): Promise<ArticlePublic[]> {
+  const requete = (await db())
+    .select(colonnesPubliques)
+    .from(article)
+    .leftJoin(categorie, eq(article.categorieId, categorie.id))
+    .where(eq(article.statut, "publie"))
+    .orderBy(desc(article.publieLe));
+  const lignes = limite ? await requete.limit(limite) : await requete;
+  return lignes.map((l) => ({ ...l, publieLe: l.publieLe ?? 0 }));
+}
+
+/** Article publié par son adresse, ou null (brouillon ou inconnu → 404). */
+export async function articlePublieParSlug(slug: string): Promise<ArticleComplet | null> {
+  if (!/^[a-z0-9-]{1,90}$/.test(slug)) return null; // adresse impossible : inutile d'interroger la base
+  const ligne = await (await db())
+    .select({ ...colonnesPubliques, contenuHtml: article.contenuHtml, modifieLe: article.modifieLe })
+    .from(article)
+    .leftJoin(categorie, eq(article.categorieId, categorie.id))
+    .where(and(eq(article.slug, slug), eq(article.statut, "publie")))
+    .get();
+  return ligne ? { ...ligne, publieLe: ligne.publieLe ?? 0 } : null;
 }
 
 export async function listerCategories(): Promise<Categorie[]> {
