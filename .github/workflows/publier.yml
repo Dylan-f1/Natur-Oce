@@ -1,0 +1,80 @@
+# Publication du site public en fichiers statiques (D-21).
+#
+# Lancée par l'administration après chaque enregistrement qui change le site public, ou à la main
+# (onglet Actions → « Publier le site » → Run workflow). Copie le contenu publié de la base en
+# ligne, construit le site, fige les pages publiques en HTML (npm run instantane) et déploie.
+#
+# Le dépôt est public : ce journal est lisible par tous. Il ne doit afficher que des adresses de
+# pages publiques, jamais de contenu de la base ni de secret.
+
+name: Publier le site
+
+on:
+  workflow_dispatch:
+
+# Une seule publication à la fois : une nouvelle demande annule celle en cours, la dernière gagne.
+concurrency:
+  group: publication
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  publier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: site
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      WRANGLER_SEND_METRICS: "false"
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Installer
+        run: npm ci
+
+      - name: Vérifier que la base en ligne est à jour
+        # Les migrations en ligne se font à la main, avec l'accord de Dylan : on ne déploie pas un
+        # code qui attend un schéma absent.
+        run: |
+          npx wrangler d1 migrations list natur-oce --remote | tee migrations.txt
+          grep -q "No migrations to apply" migrations.txt || { echo "::error::Migrations en attente sur la base en ligne : à appliquer avant de publier."; exit 1; }
+
+      - name: Copier le contenu publié dans une base locale
+        # Seulement les tables de contenu, jamais les comptes, sessions ni compteurs.
+        run: |
+          npx wrangler d1 migrations apply natur-oce --local
+          npx wrangler d1 export natur-oce --remote --no-schema --table article --table categorie --table tarif --output contenu.sql > /dev/null
+          npx wrangler d1 execute natur-oce --local --file contenu.sql > /dev/null
+          rm contenu.sql
+
+      - name: Variables locales pour le rendu
+        # Valeurs jetables, propres à cette exécution : les pages publiques n'en ont pas besoin,
+        # mais le Worker local les attend.
+        run: |
+          {
+            echo "ADMIN_EMAIL=publication@exemple.test"
+            echo "BETTER_AUTH_SECRET=$(openssl rand -base64 32 | tr -d '=+/')"
+          } > .dev.vars
+
+      - name: Construire
+        run: npx opennextjs-cloudflare build
+
+      - name: Figer les pages publiques
+        run: npm run instantane
+
+      - name: Déployer
+        run: npx opennextjs-cloudflare deploy

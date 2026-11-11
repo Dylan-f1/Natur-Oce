@@ -14,6 +14,41 @@ export const tarif = sqliteTable("tarif", {
 
 export type Tarif = typeof tarif.$inferSelect;
 
+/** Catégories d'articles, créées librement par Océane (30 caractères max). */
+export const categorie = sqliteTable("categorie", {
+  id: text("id").primaryKey(),
+  nom: text("nom").notNull(),
+  slug: text("slug").notNull().unique(),
+  creeLe: integer("cree_le").notNull(),
+});
+
+export type Categorie = typeof categorie.$inferSelect;
+
+/**
+ * Articles du blog (specs/SPEC-articles.md). `contenu_json` = document de l'éditeur (source),
+ * `contenu_html` = HTML public produit côté serveur par lib/articles/rendu.ts à chaque
+ * enregistrement. `slug` figé à la 1re publication (EF-07).
+ */
+export const article = sqliteTable(
+  "article",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    titre: text("titre").notNull(), // ≤ 90
+    resume: text("resume").notNull().default(""), // ≤ 160
+    categorieId: text("categorie_id").references(() => categorie.id, { onDelete: "set null" }),
+    contenuJson: text("contenu_json").notNull(),
+    contenuHtml: text("contenu_html").notNull(),
+    statut: text("statut", { enum: ["brouillon", "publie"] }).notNull().default("brouillon"),
+    publieLe: integer("publie_le"), // ms, renseigné à la 1re publication
+    creeLe: integer("cree_le").notNull(),
+    modifieLe: integer("modifie_le").notNull(),
+  },
+  (t) => [index("article_statut_publie_idx").on(t.statut, t.publieLe)],
+);
+
+export type Article = typeof article.$inferSelect;
+
 /**
  * Compteurs de limite du site (demandes de lien, formulaire de contact). `cle` = HMAC-SHA-256
  * (clé secrète du site) de l'usage et de l'IP : impossible de retrouver l'IP sans la clé (RGPD).

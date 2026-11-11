@@ -1,38 +1,28 @@
 import Image from "next/image";
 import { connection } from "next/server";
+import { listerArticlesPublies } from "@/lib/db/articles";
 import { listerTarifs } from "@/lib/db/tarifs";
 import { formaterDuree, formaterPrix } from "@/lib/tarifs";
+import { EnTete } from "./_composants/EnTete";
+import { PiedDePage } from "./_composants/PiedDePage";
+import { PlancheArticle } from "./_composants/PlancheArticle";
 
 // Accueil — porté tel quel depuis design/accueil.html (maquette validée le 10/11/2026).
-// Les textes entre crochets sont à fournir par Océane ; les articles viendront de la base (EF-06).
+// Les textes entre crochets sont à fournir par Océane ; les 3 derniers articles viennent de D1 (EF-06).
+
+/** Sans articles lisibles (base indisponible), l'accueil affiche « Les premiers conseils arrivent bientôt. » */
+function erreurArticles(erreur: unknown) {
+  console.error("[accueil] lecture des articles impossible", erreur);
+  return [];
+}
 
 export default async function Accueil() {
-  await connection(); // rendu à chaque visite : les tarifs viennent de D1 (EF-12)
-  const tarifs = await listerTarifs();
+  await connection(); // rendu à chaque visite : tarifs et articles viennent de D1 (EF-06, EF-12)
+  const [tarifs, articles] = await Promise.all([listerTarifs(), listerArticlesPublies(3).catch(erreurArticles)]);
 
   return (
     <>
-      <header className="cadre entete">
-        <a className="marque" href="#">
-          <Image
-            src="/logo-natur-oce-144.webp"
-            alt="Natur’Océ, naturopathie et accompagnement sportif"
-            width={72}
-            height={72}
-            priority
-          />
-          <span>Natur’Océ</span>
-        </a>
-        <nav aria-label="Navigation principale">
-          <ul>
-            <li><a href="#approche">Approche</a></li>
-            <li><a href="#sport">Sportifs</a></li>
-            <li><a href="#seances">Séances</a></li>
-            <li><a href="#conseils">Conseils</a></li>
-          </ul>
-        </nav>
-        <a className="bouton" href="#contact">Demander une séance</a>
-      </header>
+      <EnTete />
 
       <main>
         <div className="ouverture">
@@ -163,24 +153,12 @@ export default async function Accueil() {
           <div className="cadre">
             <div className="entete-section">
               <h2 id="titre-conseils">Conseils</h2>
-              <a className="lien-or" href="#">Tous les articles</a>
+              <a className="lien-or" href="/conseils">Tous les articles</a>
             </div>
             <div className="planches">
-              <a className="planche" href="#">
-                <span className="categorie">Alimentation (exemple)</span>
-                <h3>[Titre du premier article à fournir]</h3>
-                <span>[date]</span>
-              </a>
-              <a className="planche" href="#">
-                <span className="categorie">Sport (exemple)</span>
-                <h3>[Titre d’article à fournir]</h3>
-                <span>[date]</span>
-              </a>
-              <a className="planche" href="#">
-                <span className="categorie">Plantes (exemple)</span>
-                <h3>[Titre d’article à fournir]</h3>
-                <span>[date]</span>
-              </a>
+              {articles.map((a) => (
+                <PlancheArticle key={a.slug} article={a} />
+              ))}
             </div>
             <p className="sans-article">Les premiers conseils arrivent bientôt.</p>
           </div>
@@ -200,19 +178,7 @@ export default async function Accueil() {
         </section>
       </main>
 
-      <footer>
-        <div className="cadre">
-          <p>
-            La naturopathie ne remplace pas un avis médical. Continuez vos traitements et consultez
-            votre médecin.
-          </p>
-          <ul>
-            <li><a href="#">Mentions légales</a></li>
-            <li><a href="#">Confidentialité</a></li>
-            <li><a href="#">Instagram</a></li>
-          </ul>
-        </div>
-      </footer>
+      <PiedDePage />
     </>
   );
 }

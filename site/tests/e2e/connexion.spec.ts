@@ -32,7 +32,7 @@ test.describe("Connexion par lien e-mail", () => {
 
     await page.goto(lienUtilise);
     await expect(page).toHaveURL(/\/admin$/);
-    await expect(page.getByTestId("connectee")).toHaveText(`Vous êtes connectée avec ${OCEANE}.`);
+    await expect(page.getByTestId("connectee")).toHaveText(`Connectée avec ${OCEANE}.`);
 
     const cookie = (await context.cookies()).find((c) => c.name.endsWith("session_token"));
     expect(cookie?.httpOnly).toBe(true);

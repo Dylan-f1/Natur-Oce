@@ -5,3 +5,7 @@ ADMIN_EMAIL=oceane@exemple.test
 # Secret de signature des sessions Better Auth : 32 octets aléatoires, différent en production
 # (`node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`).
 BETTER_AUTH_SECRET=a-generer
+# Publication automatique du site public (D-21) : laisser absent en local (désactivée).
+# En ligne, c'est un secret du Worker (`npx wrangler secret put GITHUB_PUBLICATION_TOKEN`),
+# créé et saisi par Dylan : jeton GitHub à portée fine, dépôt Natur-Oce seul, Actions en écriture.
+# GITHUB_PUBLICATION_TOKEN=
