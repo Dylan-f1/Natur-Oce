@@ -10,9 +10,15 @@ export default async function Administration({ searchParams }: PageProps<"/admin
   const [articles, p] = await Promise.all([listerArticlesAdmin(), searchParams]);
   const message = p.publie
     ? "L’article est publié."
-    : p.enregistre
-      ? "Le brouillon est enregistré."
-      : null;
+    : p.modifie
+      ? "Les modifications sont en ligne."
+      : p.depublie
+        ? "L’article n’est plus en ligne : il reste dans vos brouillons."
+        : p.supprime
+          ? "L’article est supprimé."
+          : p.enregistre
+            ? "Le brouillon est enregistré."
+            : null;
 
   return (
     <>
@@ -27,13 +33,13 @@ export default async function Administration({ searchParams }: PageProps<"/admin
       {message && <p role="status" className="message-info">{message}</p>}
 
       {articles.length === 0 ? (
-        <p className="vide">Aucun article pour l’instant. Commencez par « Nouvel article ».</p>
+        <p className="vide">Aucun article pour l’instant. Commencez par « Nouvel article ».</p>
       ) : (
         <ul className="liste-articles">
           {articles.map((a) => (
             <li key={a.id} data-statut={a.statut}>
               <span className={`pastille pastille-${a.statut}`}>{a.statut === "publie" ? "Publié" : "Brouillon"}</span>
-              <span className="liste-titre">{a.titre}</span>
+              <Link className="liste-titre" href={`/admin/articles/${a.id}`}>{a.titre}</Link>
               <span className="liste-meta">
                 {a.categorie ?? "Sans catégorie"},{" "}
                 {a.statut === "publie" && a.publieLe

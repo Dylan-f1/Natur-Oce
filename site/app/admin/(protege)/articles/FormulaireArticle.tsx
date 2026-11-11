@@ -18,11 +18,14 @@ type Props = {
   action: (etat: EtatFormulaire, donnees: FormData) => Promise<EtatFormulaire>;
   categories: Categorie[];
   initial: ValeursFormulaire;
+  /** Statut actuel de l'article modifié ; absent pour un nouvel article. */
+  statut?: "brouillon" | "publie";
 };
 
 // Formulaire d'article : champs contrôlés, pour que rien ne soit perdu en cas d'erreur
 // (React 19 vide les formulaires non contrôlés après chaque envoi).
-export function FormulaireArticle({ action, categories, initial }: Props) {
+export function FormulaireArticle({ action, categories, initial, statut }: Props) {
+  const publie = statut === "publie";
   const [etat, envoyer, enCours] = useActionState(action, {});
   const [v, setV] = useState<ValeursFormulaire>(initial);
   const erreurs = etat.erreurs ?? {};
@@ -80,11 +83,13 @@ export function FormulaireArticle({ action, categories, initial }: Props) {
       </div>
 
       <div className="actions-formulaire">
+        {/* Mêmes intentions, libellés selon le statut : un article publié se modifie en ligne
+            ou repasse en brouillon (« Dépublier ») avec la saisie du moment. */}
         <button type="submit" name="intention" value="publier" className="bouton" disabled={enCours}>
-          Publier
+          {publie ? "Enregistrer les modifications" : "Publier"}
         </button>
         <button type="submit" name="intention" value="brouillon" className="bouton-secondaire" disabled={enCours}>
-          Enregistrer le brouillon
+          {publie ? "Dépublier" : "Enregistrer le brouillon"}
         </button>
         {enCours && <span role="status">Enregistrement…</span>}
       </div>

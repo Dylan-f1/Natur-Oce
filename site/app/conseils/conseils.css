@@ -5,6 +5,21 @@
 .titre-page { font: 400 clamp(2.4rem, 5vw, 4.25rem)/1.05 var(--titre); color: var(--olive-fonce); margin: 0 0 0.75rem; overflow-wrap: break-word; }
 .intro-page { font-size: clamp(1.1rem, 1.4vw, 1.3rem); max-width: 46ch; margin: 0 0 clamp(2rem, 4vw, 3rem); }
 .page-conseils .sans-article { display: block; }
+.page-conseils .sans-article a { color: var(--or-texte); text-underline-offset: 4px; }
+
+/* Filtre par catégorie (T9, EF-08) : une ligne de mots, la catégorie choisie soulignée. */
+.filtres { margin: 0 0 clamp(1.5rem, 3vw, 2.25rem); }
+.filtres ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 1.75rem; }
+.filtres a {
+  display: inline-block; padding-block: 0.6rem; color: var(--olive-fonce); text-decoration: none;
+  font-size: 1.1rem; touch-action: manipulation;
+}
+.filtres a[aria-current="page"] { text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: var(--or); text-underline-offset: 7px; }
+.filtres a:focus-visible { outline: 2px solid var(--olive); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .filtres a:not([aria-current]):hover { text-decoration: underline; text-decoration-color: var(--filet); text-underline-offset: 7px; }
+}
+.lecture-etiquette dd a { color: inherit; text-underline-offset: 4px; }
 
 /* Article : une colonne de lecture sur une feuille, l'étiquette d'herbier en tête. */
 .fil-ariane { font-size: 1rem; margin: 0 0 1.5rem; }

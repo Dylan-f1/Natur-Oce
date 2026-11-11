@@ -42,7 +42,13 @@ export default async function PageArticle({ params }: PageProps<"/conseils/[slug
             {article.categorie && (
               <>
                 <dt>Catégorie</dt>
-                <dd>{article.categorie}</dd>
+                <dd>
+                  {article.categorieSlug ? (
+                    <Link href={`/conseils?categorie=${article.categorieSlug}`}>{article.categorie}</Link>
+                  ) : (
+                    article.categorie
+                  )}
+                </dd>
               </>
             )}
             <dt>Publié le</dt>

@@ -3,7 +3,15 @@
 import { redirect } from "next/navigation";
 import { rendreArticle, texteBrut } from "@/lib/articles/rendu";
 import { validerArticle, type ErreursArticle } from "@/lib/articles/validation";
-import { categorieParId, categorieParNom, creerArticle } from "@/lib/db/articles";
+import {
+  articleParId,
+  categorieParId,
+  categorieParNom,
+  creerArticle,
+  modifierArticle,
+  supprimerArticle,
+  type NouvelArticle,
+} from "@/lib/db/articles";
 import { exigerSession } from "@/lib/session";
 import { NOUVELLE } from "./constantes";
 
@@ -21,20 +29,23 @@ export type EtatFormulaire = {
 };
 
 const TAILLE_MAX_CONTENU = 300_000; // caractères de JSON (~ 100 pages de texte)
+const ECHEC = "L’enregistrement a échoué. Réessayez dans un instant : votre texte est conservé.";
 
 function lire(donnees: FormData, cle: string): string {
   const v = donnees.get(cle);
   return typeof v === "string" ? v : "";
 }
 
-/**
- * Enregistre un nouvel article, en brouillon ou publié (EF-09). Le HTML public est produit ici,
- * côté serveur, par le rendu en liste blanche : rien de ce que le navigateur envoie n'est publié
- * tel quel.
- */
-export async function enregistrerNouvelArticle(_etat: EtatFormulaire, donnees: FormData): Promise<EtatFormulaire> {
-  await exigerSession();
+type Preparation =
+  | { ok: false; etat: EtatFormulaire }
+  | { ok: true; publier: boolean; valeurs: ValeursFormulaire; article: NouvelArticle };
 
+/**
+ * Lit et valide le formulaire, puis prépare l'article à enregistrer. Le HTML public est produit
+ * ici, côté serveur, par le rendu en liste blanche : rien de ce que le navigateur envoie n'est
+ * publié tel quel.
+ */
+async function preparer(donnees: FormData): Promise<Preparation> {
   const publier = lire(donnees, "intention") === "publier";
   const valeurs: ValeursFormulaire = {
     titre: lire(donnees, "titre"),
@@ -68,29 +79,78 @@ export async function enregistrerNouvelArticle(_etat: EtatFormulaire, donnees: F
     erreurs.contenu = "Écrivez le contenu de l’article avant de publier.";
   }
 
-  if (Object.keys(erreurs).length > 0) return { erreurs, valeurs }; // la saisie est rendue telle quelle
+  if (!verdict.ok || Object.keys(erreurs).length > 0) return { ok: false, etat: { erreurs, valeurs } };
 
   const categorieRetenue =
     valeurs.categorieId === NOUVELLE && verdict.valeurs.categorie
       ? await categorieParNom(verdict.valeurs.categorie)
       : existante;
 
+  return {
+    ok: true,
+    publier,
+    valeurs,
+    article: {
+      titre: verdict.valeurs.titre,
+      resume: verdict.valeurs.resume,
+      categorieId: categorieRetenue?.id ?? null,
+      contenuJson: JSON.stringify(documentEditeur),
+      contenuHtml: html,
+    },
+  };
+}
+
+/** Enregistre un nouvel article, en brouillon ou publié (EF-09). */
+export async function enregistrerNouvelArticle(_etat: EtatFormulaire, donnees: FormData): Promise<EtatFormulaire> {
+  await exigerSession();
+  const p = await preparer(donnees);
+  if (!p.ok) return p.etat; // la saisie est rendue telle quelle
+
   let slug: string;
   try {
-    slug = await creerArticle(
-      {
-        titre: verdict.valeurs.titre,
-        resume: verdict.valeurs.resume,
-        categorieId: categorieRetenue?.id ?? null,
-        contenuJson: JSON.stringify(documentEditeur),
-        contenuHtml: html,
-      },
-      publier,
-    );
+    slug = await creerArticle(p.article, p.publier);
   } catch (erreur) {
     console.error("[articles] enregistrement impossible", erreur);
-    return { erreurs: { general: "L’enregistrement a échoué. Réessayez dans un instant : votre texte est conservé." }, valeurs };
+    return { erreurs: { general: ECHEC }, valeurs: p.valeurs };
   }
+  redirect(`/admin?${p.publier ? "publie" : "enregistre"}=${encodeURIComponent(slug)}`);
+}
 
-  redirect(`/admin?${publier ? "publie" : "enregistre"}=${encodeURIComponent(slug)}`);
+/**
+ * Enregistre une nouvelle version d'un article existant (EF-10). Sur un article publié,
+ * « Enregistrer les modifications » le garde en ligne et « Dépublier » le repasse en brouillon,
+ * avec la saisie du moment : rien n'est perdu.
+ */
+export async function enregistrerArticle(id: string, _etat: EtatFormulaire, donnees: FormData): Promise<EtatFormulaire> {
+  await exigerSession();
+  const actuel = await articleParId(id);
+  if (!actuel) return { erreurs: { general: "Cet article n’existe plus : il a peut-être été supprimé." } };
+
+  const p = await preparer(donnees);
+  if (!p.ok) return p.etat;
+
+  let slug: string | null;
+  try {
+    slug = await modifierArticle(actuel, p.article, p.publier);
+  } catch (erreur) {
+    console.error("[articles] modification impossible", erreur);
+    return { erreurs: { general: ECHEC }, valeurs: p.valeurs };
+  }
+  if (!slug) return { erreurs: { general: "Cet article n’existe plus : il a peut-être été supprimé." }, valeurs: p.valeurs };
+
+  const etaitPublie = actuel.statut === "publie";
+  const message = p.publier ? (etaitPublie ? "modifie" : "publie") : etaitPublie ? "depublie" : "enregistre";
+  redirect(`/admin?${message}=${encodeURIComponent(slug)}`);
+}
+
+/** Supprime définitivement un article, après confirmation dans la page. */
+export async function supprimerArticleAction(id: string): Promise<void> {
+  await exigerSession();
+  try {
+    await supprimerArticle(id); // déjà supprimé : même issue, l'article n'est plus là
+  } catch (erreur) {
+    console.error("[articles] suppression impossible", erreur);
+    redirect(`/admin/articles/${encodeURIComponent(id)}?erreur=suppression`);
+  }
+  redirect("/admin?supprime=1");
 }

@@ -31,7 +31,7 @@
 .admin-entete :focus-visible { outline: 2px solid var(--or-clair); outline-offset: 3px; }
 
 .admin-contenu { padding-block: clamp(2rem, 6vw, 3.5rem); }
-.admin-contenu h1 { font: 400 clamp(1.9rem, 5vw, 2.6rem)/1.1 var(--titre); color: var(--olive-fonce); margin: 0 0 1rem; }
+.admin-contenu h1 { font: 400 clamp(1.9rem, 5vw, 2.6rem)/1.1 var(--titre); color: var(--olive-fonce); margin: 0 0 1rem; max-width: 32ch; }
 
 @media (max-width: 640px) {
   .admin-entete .admin-cadre { gap: 0 1.25rem; }
@@ -91,3 +91,34 @@
   .editeur-bouton:hover { border-color: var(--filet); }
   .bouton-secondaire:hover { background: var(--feuille); }
 }
+
+/* ---------- Modifier, supprimer (T9) ---------- */
+a.liste-titre { text-decoration: none; }
+a.liste-titre:focus-visible { outline: 2px solid var(--olive); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  a.liste-titre:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .bouton-danger-secondaire:hover { background: #F6E7DF; }
+  .bouton-danger:hover { background: #7A2A12; }
+}
+.etat-article { margin: -0.5rem 0 2rem; }
+.etat-article a { color: var(--or-texte); overflow-wrap: anywhere; }
+
+.zone-suppression { max-width: 48rem; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--filet); }
+.zone-suppression h2 { font: 500 1.15rem/1.3 var(--texte); margin: 0; }
+.zone-suppression .aide { margin-bottom: 1rem; }
+.bouton-danger, .bouton-danger-secondaire {
+  font: 500 1.05rem/1.2 var(--texte); padding: 0.95rem 1.4rem; border-radius: 2px; cursor: pointer; touch-action: manipulation;
+}
+.bouton-danger { background: #8A2F14; color: #FFFDF8; border: 1px solid #8A2F14; }
+.bouton-danger-secondaire { background: transparent; color: #8A2F14; border: 1px solid #8A2F14; }
+.bouton-danger:disabled { opacity: 0.6; cursor: progress; }
+
+.confirmation {
+  width: min(30rem, calc(100vw - 2.5rem)); padding: 1.5rem; border: 1px solid #CFC3A8; border-radius: 2px;
+  background: var(--papier); color: var(--encre);
+}
+.confirmation::backdrop { background: rgb(61 73 27 / 0.45); }
+.confirmation h2 { font: 400 1.5rem/1.2 var(--titre); color: var(--olive-fonce); margin: 0 0 0.75rem; }
+.confirmation p { margin: 0 0 1.5rem; overflow-wrap: anywhere; }
+.confirmation-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; }
+.confirmation :focus-visible, .zone-suppression :focus-visible { outline: 2px solid var(--olive); outline-offset: 3px; }
