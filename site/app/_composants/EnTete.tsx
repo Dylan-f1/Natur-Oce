@@ -1,12 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
 
 // En-tête du site public, commun à l'accueil et aux conseils. Liens absolus (/#…) : ils
-// fonctionnent depuis n'importe quelle page.
+// fonctionnent depuis n'importe quelle page. De simples <a>, pas next/link : les pages publiques
+// sont des fichiers statiques (D-21, specs/SPEC-publication.md).
 export function EnTete() {
   return (
     <header className="cadre entete">
-      <Link className="marque" href="/">
+      <a className="marque" href="/">
         <Image
           src="/logo-natur-oce-144.webp"
           alt="Natur’Océ, naturopathie et accompagnement sportif"
@@ -15,16 +15,16 @@ export function EnTete() {
           priority
         />
         <span>Natur’Océ</span>
-      </Link>
+      </a>
       <nav aria-label="Navigation principale">
         <ul>
-          <li><Link href="/#approche">Approche</Link></li>
-          <li><Link href="/#sport">Sportifs</Link></li>
-          <li><Link href="/#seances">Séances</Link></li>
-          <li><Link href="/conseils">Conseils</Link></li>
+          <li><a href="/#approche">Approche</a></li>
+          <li><a href="/#sport">Sportifs</a></li>
+          <li><a href="/#seances">Séances</a></li>
+          <li><a href="/conseils">Conseils</a></li>
         </ul>
       </nav>
-      <Link className="bouton" href="/#contact">Demander une séance</Link>
+      <a className="bouton" href="/#contact">Demander une séance</a>
     </header>
   );
 }

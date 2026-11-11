@@ -3,6 +3,7 @@ import { lignesLocales, sqlLocal } from "./outils/d1";
 import { seConnecter, viderComptes } from "./outils/connexion";
 
 // T9 · Modifier, dépublier, supprimer, filtrer (specs/SPEC-articles.md, EF-08, EF-10).
+// P1 : filtre dans le chemin, `/conseils/categorie/<slug>` (specs/SPEC-publication.md).
 
 test.describe.configure({ mode: "serial" });
 
@@ -39,26 +40,26 @@ test.describe("Conseils : filtre par catégorie (EF-08)", () => {
     await expect(filtres.getByRole("link", { name: "Tous" })).toHaveAttribute("aria-current", "page");
 
     await filtres.getByRole("link", { name: "Sport" }).click();
-    await expect(page).toHaveURL(/\/conseils\?categorie=sport$/);
+    await expect(page).toHaveURL(/\/conseils\/categorie\/sport$/);
     await expect(page.locator(".planche h3")).toHaveText(["Manger avant une course"]); // ni Sommeil ni le brouillon
     await expect(filtres.getByRole("link", { name: "Sport" })).toHaveAttribute("aria-current", "page");
     await expect(page).toHaveTitle("Conseils : Sport · Natur’Océ");
     const canonique = await page.locator('link[rel="canonical"]').getAttribute("href");
-    expect(canonique).toMatch(/\/conseils\?categorie=sport$/);
+    expect(canonique).toMatch(/\/conseils\/categorie\/sport$/);
   });
 
   test("la catégorie d'un article mène à son filtre", async ({ page }) => {
     await page.goto("/conseils/bien-dormir");
     await page.locator(".lecture-etiquette").getByRole("link", { name: "Sommeil" }).click();
-    await expect(page).toHaveURL(/\/conseils\?categorie=sommeil$/);
+    await expect(page).toHaveURL(/\/conseils\/categorie\/sommeil$/);
     await expect(page.locator(".planche h3")).toHaveText(["Bien dormir après l’effort"]);
   });
 
   test("une catégorie inconnue ou mal formée répond 404 ; une catégorie sans article publié l'annonce", async ({ page, request }) => {
-    for (const adresse of ["/conseils?categorie=inconnue", "/conseils?categorie=A%27B"]) {
+    for (const adresse of ["/conseils/categorie/inconnue", "/conseils/categorie/A%27B"]) {
       expect((await request.get(adresse)).status(), adresse).toBe(404);
     }
-    await page.goto("/conseils?categorie=plantes");
+    await page.goto("/conseils/categorie/plantes");
     await expect(page.getByText("Aucun conseil publié dans cette catégorie pour l’instant.")).toBeVisible();
     await expect(page.getByRole("link", { name: "Voir tous les conseils" })).toBeVisible();
   });

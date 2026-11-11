@@ -75,6 +75,23 @@ test.describe("Conseils publics", () => {
     await expect(page).toHaveURL(/\/conseils\/manger-avant-course$/);
   });
 
+  test("les liens publics sont de simples liens : aucune requête `_rsc` au chargement ni au clic (P1, D-21)", async ({ page }) => {
+    // Sur une page servie en fichier statique, un lien Next demanderait `?_rsc=` et recevrait du
+    // HTML, puis rechargerait la page : 3 requêtes au lieu d'une (specs/SPEC-publication.md).
+    const rsc: string[] = [];
+    page.on("request", (r) => {
+      if (r.url().includes("_rsc=") || r.headers()["rsc"]) rsc.push(r.url());
+    });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.getByRole("navigation", { name: "Navigation principale" }).getByRole("link", { name: "Conseils" }).click();
+    await expect(page).toHaveURL(/\/conseils$/);
+    await page.locator(".planche").first().click();
+    await expect(page).toHaveURL(/\/conseils\/[a-z0-9-]+$/);
+    await page.waitForLoadState("networkidle");
+    expect(rsc).toEqual([]);
+  });
+
   test("sans article publié, l'accueil et /conseils l'annoncent simplement", async ({ page }) => {
     sqlLocal("DELETE FROM article;");
     await page.goto("/");
