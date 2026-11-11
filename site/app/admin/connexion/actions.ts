@@ -4,7 +4,7 @@ import { APIError } from "better-auth/api";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { env } from "@/lib/cloudflare";
-import { creerAuth, estAutorisee, normaliserAdresse, origineDesEntetes } from "@/lib/auth";
+import { creerAuth, estAutorisee, origineDesEntetes } from "@/lib/auth";
 import { cleLimite, compterTentative, ipDuVisiteur } from "@/lib/limite";
 
 const MAX_DEMANDES = 3;
@@ -19,20 +19,15 @@ export async function demanderLien(donnees: FormData): Promise<void> {
   const entetes = await headers();
   let issue = "envoye=1";
 
-  // Limite : 3 demandes par 15 min, par IP et par adresse, comptées pour toute adresse saisie
-  // (la réponse ne doit pas différer selon que l'adresse est la bonne ou non).
-  const [parIp, parAdresse] = await Promise.all([
-    cleLimite("lien-ip", ipDuVisiteur(entetes)),
-    cleLimite("lien-adresse", normaliserAdresse(email)),
-  ]);
-  const sousLaLimite = await Promise.all([
-    compterTentative(parIp, MAX_DEMANDES, QUINZE_MINUTES),
-    compterTentative(parAdresse, MAX_DEMANDES, QUINZE_MINUTES),
-  ]);
-  if (sousLaLimite.includes(false)) redirect("/admin/connexion?erreur=trop");
+  // Limite : 3 demandes par 15 min **par IP**, comptées pour toute adresse saisie (la réponse ne
+  // doit pas différer selon que l'adresse est la bonne ou non). Pas de limite par adresse : sinon
+  // n'importe qui bloquerait la connexion d'Océane en saisissant 3 fois la sienne (revue du
+  // point de contrôle 2, décision de Dylan le 11/11/2026).
+  const parIp = await cleLimite("lien-ip", ipDuVisiteur(entetes));
+  if (!(await compterTentative(parIp, MAX_DEMANDES, QUINZE_MINUTES))) redirect("/admin/connexion?erreur=trop");
 
-  // Autre adresse : rien n'est écrit en base hors compteur haché (pas même l'adresse saisie,
-  // RGPD), rien n'est envoyé, même message. Better Auth garde sa propre barrière (lib/auth).
+  // Autre adresse : rien n'est écrit en base hors compteur à clé secrète (pas même l'adresse
+  // saisie, RGPD), rien n'est envoyé, même message. Better Auth garde sa propre barrière (lib/auth).
   if (!estAutorisee(email, (await env()).ADMIN_EMAIL)) redirect(`/admin/connexion?${issue}`);
 
   try {
