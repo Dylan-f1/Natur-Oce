@@ -4,6 +4,7 @@ import { listerArticlesPublies } from "@/lib/db/articles";
 import { listerTarifs } from "@/lib/db/tarifs";
 import { formaterDuree, formaterPrix } from "@/lib/tarifs";
 import { EnTete } from "./_composants/EnTete";
+import { FormulaireContact } from "./_composants/FormulaireContact";
 import { PiedDePage } from "./_composants/PiedDePage";
 import { PlancheArticle } from "./_composants/PlancheArticle";
 
@@ -172,7 +173,7 @@ export default async function Accueil() {
                 Écrivez-moi : je vous réponds par mail pour fixer une séance en visio. Inutile de
                 décrire vos problèmes de santé, on en parlera ensemble.
               </p>
-              <a className="bouton" href="#">Demander une séance</a>
+              <FormulaireContact />
             </div>
           </div>
         </section>

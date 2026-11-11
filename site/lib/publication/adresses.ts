@@ -8,6 +8,9 @@ export const MARQUE = "instantane";
 /** Ligne d'article telle que lue en base pour l'instantané. */
 export type LigneInstantane = { slug: string; statut: string; categorieSlug: string | null };
 
+/** Pages sans contenu de la base : retours du formulaire sans JavaScript (T12). */
+const PAGES_FIXES = ["/contact/envoyee", "/contact/non-envoyee"];
+
 const SEGMENT = /^[a-z0-9-]{1,90}$/;
 const ADRESSE = /^\/(?:[a-z0-9-]{1,90}(?:\/[a-z0-9-]{1,90})*)?$/;
 
@@ -16,8 +19,9 @@ function refuser(adresse: string): never {
 }
 
 /**
- * Adresses publiques à figer : l'accueil, /conseils, chaque article publié (dans l'ordre reçu) et
- * chaque catégorie qui a au moins un article publié. Les brouillons n'en font jamais partie.
+ * Adresses publiques à figer : l'accueil, /conseils, chaque article publié (dans l'ordre reçu),
+ * chaque catégorie qui a au moins un article publié, et les pages de retour du formulaire.
+ * Les brouillons n'en font jamais partie.
  */
 export function adressesPubliques(lignes: readonly LigneInstantane[]): string[] {
   const articles: string[] = [];
@@ -31,7 +35,7 @@ export function adressesPubliques(lignes: readonly LigneInstantane[]): string[] 
       categories.add(`/conseils/categorie/${l.categorieSlug}`);
     }
   }
-  return ["/", "/conseils", ...articles, ...categories];
+  return ["/", "/conseils", ...articles, ...categories, ...PAGES_FIXES];
 }
 
 /**

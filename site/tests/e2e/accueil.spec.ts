@@ -13,12 +13,17 @@ test.describe("Accueil", () => {
     );
   });
 
-  test("une seule action principale : « Demander une séance » partout", async ({ page }) => {
+  test("une seule action principale : « Demander une séance » partout, qui mène au formulaire", async ({ page }) => {
     await page.goto("/");
-    await expect(page.locator(".bouton")).toHaveCount(4);
-    for (const bouton of await page.locator(".bouton").all()) {
-      await expect(bouton).toHaveText("Demander une séance");
+    // Depuis T12, le bouton de la section contact est devenu le formulaire lui-même.
+    const liens = page.locator("a.bouton");
+    await expect(liens).toHaveCount(3);
+    for (const lien of await liens.all()) {
+      await expect(lien).toHaveText("Demander une séance");
+      await expect(lien).toHaveAttribute("href", /#contact$/);
     }
+    await expect(page.locator("button.bouton")).toHaveText(["Envoyer ma demande"]); // le seul autre : l'envoi du formulaire
+    await expect(page.locator("#contact form")).toHaveCount(1);
   });
 
   test("affiche l'avertissement médical près des tarifs et en pied de page (EF-15)", async ({ page }) => {
