@@ -36,9 +36,9 @@ export function lienSur(href: unknown): { href: string; externe: boolean } | nul
   return { href: url.href, externe: !interne };
 }
 
-/** Image autorisée : uniquement celles servies par le site (module images, R2). */
+/** Image autorisée : uniquement celles servies par le site (module images, D-22), en WebP ou JPEG. */
 export function imageSure(src: unknown): string | null {
-  return typeof src === "string" && /^\/images\/[a-z0-9][a-z0-9/-]{0,120}\.webp$/.test(src) && !src.includes("..")
+  return typeof src === "string" && /^\/images\/[a-z0-9][a-z0-9/-]{0,120}\.(webp|jpg)$/.test(src) && !src.includes("..")
     ? src
     : null;
 }

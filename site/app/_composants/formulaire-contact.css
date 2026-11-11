@@ -1,0 +1,44 @@
+/* Formulaire de demande de séance (T12) : une fiche d'herbier posée dans « Prendre rendez-vous »,
+   avec les tokens de globals.css (direction L'herbier). Champs à 16 px au moins (pas de zoom iOS). */
+
+.contact .grille { align-items: start; }
+.contact .col-corps { display: block; }
+.contact .col-corps > p { margin: 0 0 1.75rem; }
+
+.formulaire-contact, .contact-envoye {
+  max-width: 40rem; background: var(--etiquette); border: 1px solid #CFC3A8;
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+.formulaire-contact { display: grid; gap: 1.25rem; }
+.champs-contact { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 1.25rem; }
+.champ-contact { display: grid; gap: 0.4rem; min-width: 0; }
+.champ-contact label { font-weight: 500; }
+.facultatif { font-weight: 400; color: #5C6448; }
+
+.champ-contact input, .champ-contact textarea {
+  width: 100%; min-width: 0; font: inherit; font-size: max(1rem, 16px); line-height: 1.5;
+  padding: 0.75rem 0.85rem; color: var(--encre); background: var(--papier);
+  border: 1px solid #B9AD92; border-radius: 2px;
+}
+.champ-contact textarea { resize: vertical; min-height: 8rem; }
+.champ-contact input:focus-visible, .champ-contact textarea:focus-visible { outline: 2px solid var(--olive); outline-offset: 1px; border-color: var(--olive); }
+.champ-contact [aria-invalid="true"] { border-color: #9B3D1E; }
+
+.formulaire-contact .aide-champ { margin: 0; font-size: 0.95rem; color: #5C6448; max-width: none; }
+.formulaire-contact .erreur-champ { margin: 0; font-size: 0.95rem; color: #8A2F14; max-width: none; }
+.formulaire-contact .erreur-generale { margin: 0; padding: 0.8rem 1rem; border-left: 3px solid #9B3D1E; background: var(--feuille); max-width: none; }
+
+.envoi-contact { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.envoi-contact .bouton { border: 0; cursor: pointer; }
+.envoi-contact .bouton:disabled { opacity: 0.6; cursor: progress; }
+
+/* Hors de l'écran plutôt que display:none : certains robots sautent les champs cachés. */
+.piege { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+
+.contact-envoye p { margin: 0; max-width: none; }
+.contact-envoye .contact-envoye-titre { font: 400 clamp(1.4rem, 2.4vw, 1.8rem)/1.2 var(--titre); color: var(--olive-fonce); margin-bottom: 0.5rem; }
+.contact-envoye:focus-visible { outline: 2px solid var(--olive); outline-offset: 3px; }
+
+@media (max-width: 760px) {
+  .champs-contact { grid-template-columns: minmax(0, 1fr); }
+}

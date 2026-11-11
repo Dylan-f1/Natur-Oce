@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  ENTETES_STATIQUES,
   MARQUE,
   adressesPubliques,
   cheminFichier,
+  cheminFichierImage,
+  imagesCitees,
+  origineImagesValide,
   marquerHtml,
   verifierHtml,
 } from "@/lib/publication/adresses";
@@ -26,6 +30,8 @@ describe("adressesPubliques", () => {
       "/conseils/plantes-hiver",
       "/conseils/categorie/sommeil",
       "/conseils/categorie/sport",
+      "/contact/envoyee",
+      "/contact/non-envoyee",
     ]);
   });
 
@@ -35,8 +41,8 @@ describe("adressesPubliques", () => {
     expect(adresses).not.toContain("/conseils/categorie/souplesse");
   });
 
-  it("sans article : l'accueil et /conseils seulement", () => {
-    expect(adressesPubliques([])).toEqual(["/", "/conseils"]);
+  it("sans article : l'accueil, /conseils et les pages de retour du formulaire", () => {
+    expect(adressesPubliques([])).toEqual(["/", "/conseils", "/contact/envoyee", "/contact/non-envoyee"]);
   });
 
   it("une catégorie partagée par plusieurs articles n'apparaît qu'une fois", () => {
@@ -97,5 +103,41 @@ describe("marquerHtml", () => {
 
   it("échoue s'il n'y a pas de <head>", () => {
     expect(() => marquerHtml("<html><body></body></html>", "2026-11-11T10:00:00.000Z")).toThrow(/<head>/);
+  });
+});
+
+describe("images de l'instantané (T10)", () => {
+  const cle = "3f2a9c1e-5b7d-4e8f-9a0b-1c2d3e4f5a6b";
+
+  it("relève les images du site citées par la page, une seule fois chacune", () => {
+    const html = `<p>x</p><img src="/images/${cle}.webp" alt="a" width="1600" height="900" loading="lazy">` +
+      `<img alt="b" src="/images/${cle}.jpg"><img src="/images/${cle}.webp" alt="redite">` +
+      `<img src="https://exemple.test/a.webp" alt="c"><img src="/logo-natur-oce-144.webp" alt="logo">` +
+      `<img src="/images/../wrangler.webp" alt="d">`;
+    expect(imagesCitees(html)).toEqual([`/images/${cle}.webp`, `/images/${cle}.jpg`]);
+  });
+
+  it("une page sans image n'en cite aucune", () => {
+    expect(imagesCitees("<main><p>Rien</p></main>")).toEqual([]);
+  });
+
+  it("chemin du fichier : dans images/, et seulement pour une clé du site", () => {
+    expect(cheminFichierImage(`/images/${cle}.webp`)).toBe(`images/${cle}.webp`);
+    for (const src of ["/images/../x.webp", "/images/a.webp", `/images/${cle}.png`, `/x/${cle}.webp`]) {
+      expect(() => cheminFichierImage(src), src).toThrow(/Image refusée/);
+    }
+  });
+
+  it("_headers donne aux images figées le même cache d'un an que le Worker", () => {
+    expect(ENTETES_STATIQUES).toMatch(/^\/images\/\*\r?\n {2}Cache-Control: public, max-age=31536000, immutable$/m);
+  });
+
+  it("images prises sur le site en ligne (https) ou un serveur local de test, rien d'autre", () => {
+    expect(origineImagesValide("https://natur-oce.df-dev.workers.dev")).toBe(true);
+    expect(origineImagesValide("https://natur-oce.fr")).toBe(true);
+    expect(origineImagesValide("http://127.0.0.1:8791")).toBe(true);
+    for (const o of ["http://natur-oce.fr", "https://natur-oce.fr/", "file:///etc/passwd", "https://a.b/c", "", "http://10.0.0.1:80"]) {
+      expect(origineImagesValide(o), o).toBe(false);
+    }
   });
 });

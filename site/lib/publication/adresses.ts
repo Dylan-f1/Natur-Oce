@@ -8,6 +8,9 @@ export const MARQUE = "instantane";
 /** Ligne d'article telle que lue en base pour l'instantané. */
 export type LigneInstantane = { slug: string; statut: string; categorieSlug: string | null };
 
+/** Pages sans contenu de la base : retours du formulaire sans JavaScript (T12). */
+const PAGES_FIXES = ["/contact/envoyee", "/contact/non-envoyee"];
+
 const SEGMENT = /^[a-z0-9-]{1,90}$/;
 const ADRESSE = /^\/(?:[a-z0-9-]{1,90}(?:\/[a-z0-9-]{1,90})*)?$/;
 
@@ -16,8 +19,9 @@ function refuser(adresse: string): never {
 }
 
 /**
- * Adresses publiques à figer : l'accueil, /conseils, chaque article publié (dans l'ordre reçu) et
- * chaque catégorie qui a au moins un article publié. Les brouillons n'en font jamais partie.
+ * Adresses publiques à figer : l'accueil, /conseils, chaque article publié (dans l'ordre reçu),
+ * chaque catégorie qui a au moins un article publié, et les pages de retour du formulaire.
+ * Les brouillons n'en font jamais partie.
  */
 export function adressesPubliques(lignes: readonly LigneInstantane[]): string[] {
   const articles: string[] = [];
@@ -31,7 +35,7 @@ export function adressesPubliques(lignes: readonly LigneInstantane[]): string[] 
       categories.add(`/conseils/categorie/${l.categorieSlug}`);
     }
   }
-  return ["/", "/conseils", ...articles, ...categories];
+  return ["/", "/conseils", ...articles, ...categories, ...PAGES_FIXES];
 }
 
 /**
@@ -59,3 +63,38 @@ export function marquerHtml(html: string, date: string): string {
   if (!html.includes("<head>")) throw new Error("Pas de <head> dans la page : impossible de la dater");
   return html.replace("<head>", `<head><meta name="${MARQUE}" content="${date}">`);
 }
+
+// Images (T10, D-22) : chaque image citée par une page figée est figée elle aussi.
+const IMAGE = /^\/images\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(webp|jpg)$/;
+
+/** Adresses `/images/<clé>` citées par les balises <img> d'une page, sans doublon. */
+export function imagesCitees(html: string): string[] {
+  const vues = new Set<string>();
+  for (const m of html.matchAll(/<img\b[^>]*?\ssrc="([^"]+)"/g)) {
+    if (IMAGE.test(m[1])) vues.add(m[1]);
+  }
+  return [...vues];
+}
+
+/**
+ * Origine d'où télécharger les images : le site en ligne (https) ou un serveur local de test.
+ * Rien d'autre : l'instantané ne doit pas aller chercher de fichiers ailleurs.
+ */
+export function origineImagesValide(origine: string): boolean {
+  return /^https:\/\/[a-z0-9.-]+\.[a-z]{2,}$/.test(origine) || /^http:\/\/127\.0\.0\.1:\d{2,5}$/.test(origine);
+}
+
+/** Fichier, relatif au dossier des assets, d'une image du site. */
+export function cheminFichierImage(src: string): string {
+  if (!IMAGE.test(src)) throw new Error(`Image refusée pour l'instantané : ${JSON.stringify(src)}`);
+  return src.slice(1);
+}
+
+/**
+ * Fichier `_headers` des assets : les images figées gardent un cache d'un an (leur clé n'est
+ * jamais réutilisée), comme quand le Worker les sert.
+ */
+export const ENTETES_STATIQUES = `/images/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+`;
