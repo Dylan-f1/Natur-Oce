@@ -31,9 +31,94 @@
 .admin-entete :focus-visible { outline: 2px solid var(--or-clair); outline-offset: 3px; }
 
 .admin-contenu { padding-block: clamp(2rem, 6vw, 3.5rem); }
-.admin-contenu h1 { font: 400 clamp(1.9rem, 5vw, 2.6rem)/1.1 var(--titre); color: var(--olive-fonce); margin: 0 0 1rem; }
+.admin-contenu h1 { font: 400 clamp(1.9rem, 5vw, 2.6rem)/1.1 var(--titre); color: var(--olive-fonce); margin: 0 0 1rem; max-width: 32ch; }
 
 @media (max-width: 640px) {
   .admin-entete .admin-cadre { gap: 0 1.25rem; }
   .admin-marque { width: 100%; }
 }
+
+/* ---------- Liste des articles (T7) ---------- */
+.admin-titre { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.5rem; }
+.admin-titre h1 { margin-bottom: 0.25rem; }
+.aide { font-size: 0.95rem; color: #5C6448; margin: 0.25rem 0 0; }
+.vide { background: var(--feuille); padding: 1.5rem; }
+.fil { font-size: 0.95rem; margin: 0 0 0.5rem; }
+.fil a { color: var(--or-texte); }
+.message-info, .message-erreur { padding: 0.9rem 1.1rem; margin: 0 0 1.5rem; border-left: 4px solid var(--olive); background: var(--feuille); }
+.message-erreur { border-left-color: #9B3D1E; }
+
+.liste-articles { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--filet); }
+.liste-articles li { display: grid; grid-template-columns: 6.25rem minmax(0, 1fr); gap: 0.2rem 1rem; align-items: baseline; padding: 1rem 0; border-bottom: 1px solid var(--filet); }
+.liste-titre { font: 400 1.2rem/1.3 var(--titre); color: var(--olive-fonce); overflow-wrap: anywhere; }
+.liste-meta { grid-column: 2; font-size: 0.95rem; color: #5C6448; }
+.pastille { grid-row: span 2; align-self: start; justify-self: start; font-size: 0.85rem; padding: 0.15rem 0.55rem; border: 1px solid currentColor; white-space: nowrap; }
+.pastille-brouillon { color: #7A4F12; }
+.pastille-publie { color: var(--olive); }
+
+/* ---------- Formulaire d'article et éditeur (T7) ---------- */
+.formulaire { display: grid; gap: 1.5rem; max-width: 48rem; }
+.champ { display: grid; gap: 0.4rem; }
+.champ label, .champ .etiquette-champ { font-weight: 500; }
+.champ .sous-label { font-weight: 400; margin-top: 0.5rem; }
+.champ input, .champ select, .champ textarea {
+  font: inherit; font-size: 1rem; padding: 0.75rem 0.85rem; border: 1px solid #B9AD92; background: #FFFDF8; color: var(--encre); border-radius: 2px;
+}
+.champ textarea { resize: vertical; }
+.champ [aria-invalid="true"] { border-color: #9B3D1E; }
+.erreur { color: #8A2F14; margin: 0; font-size: 0.95rem; }
+.actions-formulaire { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.bouton-secondaire {
+  font: 500 1.05rem/1.2 var(--texte); padding: 0.95rem 1.4rem; background: transparent; color: var(--olive-fonce);
+  border: 1px solid var(--olive-fonce); border-radius: 2px; cursor: pointer; touch-action: manipulation;
+}
+.formulaire button:disabled { opacity: 0.6; cursor: progress; }
+.formulaire .bouton { border: 0; cursor: pointer; }
+
+.editeur { border: 1px solid #B9AD92; background: #FFFDF8; }
+.editeur-barre { display: flex; flex-wrap: wrap; gap: 0.25rem; padding: 0.4rem; border-bottom: 1px solid var(--filet); background: var(--feuille); position: sticky; top: 0; z-index: 1; }
+.editeur-bouton { font: inherit; font-size: 0.95rem; padding: 0.55rem 0.7rem; min-height: 44px; background: transparent; border: 1px solid transparent; color: var(--encre); cursor: pointer; touch-action: manipulation; }
+.editeur-bouton[aria-pressed="true"] { background: var(--olive-fonce); color: var(--papier); }
+.editeur-zone { min-height: 18rem; padding: 1rem 1.1rem; outline: none; font-size: 1.1rem; line-height: 1.65; }
+.editeur-zone:focus-visible { box-shadow: inset 0 0 0 2px var(--olive); }
+.editeur-zone h2 { font: 400 1.6rem/1.2 var(--titre); color: var(--olive-fonce); margin: 1.2rem 0 0.5rem; }
+.editeur-zone h3 { font: 500 1.25rem/1.3 var(--texte); margin: 1rem 0 0.4rem; }
+.editeur-zone blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--or); font-style: italic; }
+.editeur-zone a { color: var(--or-texte); }
+.editeur-zone p:first-child { margin-top: 0; }
+
+@media (hover: hover) and (pointer: fine) {
+  .editeur-bouton:hover { border-color: var(--filet); }
+  .bouton-secondaire:hover { background: var(--feuille); }
+}
+
+/* ---------- Modifier, supprimer (T9) ---------- */
+a.liste-titre { text-decoration: none; }
+a.liste-titre:focus-visible { outline: 2px solid var(--olive); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  a.liste-titre:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .bouton-danger-secondaire:hover { background: #F6E7DF; }
+  .bouton-danger:hover { background: #7A2A12; }
+}
+.etat-article { margin: -0.5rem 0 2rem; }
+.etat-article a { color: var(--or-texte); overflow-wrap: anywhere; }
+
+.zone-suppression { max-width: 48rem; margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--filet); }
+.zone-suppression h2 { font: 500 1.15rem/1.3 var(--texte); margin: 0; }
+.zone-suppression .aide { margin-bottom: 1rem; }
+.bouton-danger, .bouton-danger-secondaire {
+  font: 500 1.05rem/1.2 var(--texte); padding: 0.95rem 1.4rem; border-radius: 2px; cursor: pointer; touch-action: manipulation;
+}
+.bouton-danger { background: #8A2F14; color: #FFFDF8; border: 1px solid #8A2F14; }
+.bouton-danger-secondaire { background: transparent; color: #8A2F14; border: 1px solid #8A2F14; }
+.bouton-danger:disabled { opacity: 0.6; cursor: progress; }
+
+.confirmation {
+  width: min(30rem, calc(100vw - 2.5rem)); padding: 1.5rem; border: 1px solid #CFC3A8; border-radius: 2px;
+  background: var(--papier); color: var(--encre);
+}
+.confirmation::backdrop { background: rgb(61 73 27 / 0.45); }
+.confirmation h2 { font: 400 1.5rem/1.2 var(--titre); color: var(--olive-fonce); margin: 0 0 0.75rem; }
+.confirmation p { margin: 0 0 1.5rem; overflow-wrap: anywhere; }
+.confirmation-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; }
+.confirmation :focus-visible, .zone-suppression :focus-visible { outline: 2px solid var(--olive); outline-offset: 3px; }

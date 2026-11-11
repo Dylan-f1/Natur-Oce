@@ -18,7 +18,7 @@ export default async function MiseEnPageAdmin({ children }: LayoutProps<"/admin"
     <div className="admin">
       <header className="admin-entete">
         <div className="admin-cadre">
-          <Link href="/admin" className="admin-marque">Natur’Océ · administration</Link>
+          <Link href="/admin" className="admin-marque">Administration de Natur’Océ</Link>
           <nav aria-label="Administration">
             <ul>
               <li><Link href="/admin">Articles</Link></li>
