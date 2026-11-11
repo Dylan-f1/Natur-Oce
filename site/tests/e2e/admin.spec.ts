@@ -4,7 +4,7 @@ import { MESSAGE_ENVOYE, demanderLien, seConnecter, viderComptes, viderLimites }
 
 // T5 · /admin protégé, déconnexion, limite de demandes (specs/SPEC-connexion.md, ENF-03).
 // Routes d'administration à balayer : à compléter à chaque nouvelle page (T7, T9, T11…).
-const ROUTES_ADMIN = ["/admin", "/admin/articles/nouveau", "/admin/articles/un-id"];
+const ROUTES_ADMIN = ["/admin", "/admin/articles/nouveau", "/admin/articles/un-id", "/admin/tarifs"];
 
 test.describe.configure({ mode: "serial" });
 

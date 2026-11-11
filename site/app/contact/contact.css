@@ -1,0 +1,5 @@
+/* Pages de retour du formulaire sans JavaScript (T12) : une colonne de lecture, comme un article. */
+.page-retour { padding-block: clamp(2.5rem, 7vw, 5rem) clamp(4rem, 9vw, 7rem); }
+.page-retour .titre-page { font: 400 clamp(2.2rem, 4.5vw, 3.6rem)/1.05 var(--titre); color: var(--olive-fonce); margin: 0 0 1rem; max-width: 20ch; }
+.page-retour p { font-size: clamp(1.1rem, 1.4vw, 1.25rem); max-width: 42ch; }
+.page-retour a { color: var(--or-texte); text-underline-offset: 4px; }

@@ -9,6 +9,21 @@ const racine = join(__dirname, "..", "..", "..");
 const wrangler = join(racine, "node_modules", "wrangler", "bin", "wrangler.js");
 
 /**
+ * Lance wrangler, en réessayant deux fois : juste après le démarrage de `wrangler dev`, la base
+ * locale est encore tenue et le premier accès peut échouer (« internal error », vu le 11/11/2026).
+ */
+function executer(args: string[]): string {
+  for (let essai = 1; ; essai++) {
+    try {
+      return execFileSync(process.execPath, [wrangler, ...args], { cwd: racine, stdio: "pipe", encoding: "utf8" });
+    } catch (erreur) {
+      if (essai === 3) throw erreur;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1_000); // attente synchrone d'une seconde
+    }
+  }
+}
+
+/**
  * Exécute du SQL sur la base D1 **locale** (la même que celle de `wrangler dev`).
  * Passe par un fichier (`--file`) pour éviter les soucis de guillemets sous Windows.
  * Réservé aux tests : jamais d'option --remote ici.
@@ -17,30 +32,19 @@ export function sqlLocal(sql: string): void {
   const dossier = mkdtempSync(join(tmpdir(), "natur-oce-d1-"));
   const fichier = join(dossier, "requete.sql");
   writeFileSync(fichier, sql, "utf8");
-  execFileSync(process.execPath, [wrangler, "d1", "execute", "natur-oce", "--local", "--file", fichier], {
-    cwd: racine,
-    stdio: "pipe",
-  });
+  executer(["d1", "execute", "natur-oce", "--local", "--file", fichier]);
 }
 
 /** Lignes renvoyées par une requête SELECT sur la base locale (SQL écrit par le test). */
 export function lignesLocales<T = Record<string, unknown>>(select: string): T[] {
-  const sortie = execFileSync(
-    process.execPath,
-    [wrangler, "d1", "execute", "natur-oce", "--local", "--json", "--command", select],
-    { cwd: racine, stdio: "pipe", encoding: "utf8" },
-  );
+  const sortie = executer(["d1", "execute", "natur-oce", "--local", "--json", "--command", select]);
   return JSON.parse(sortie.slice(sortie.indexOf("[")))[0].results as T[];
 }
 
 /** Nombre de lignes d'une table de la base locale (nom de table contrôlé, pas d'injection). */
 export function compterLignes(table: string): number {
   if (!/^[a-z_]+$/.test(table)) throw new Error(`Nom de table refusé : ${table}`);
-  const sortie = execFileSync(
-    process.execPath,
-    [wrangler, "d1", "execute", "natur-oce", "--local", "--json", "--command", `SELECT COUNT(*) AS n FROM ${table}`],
-    { cwd: racine, stdio: "pipe", encoding: "utf8" },
-  );
+  const sortie = executer(["d1", "execute", "natur-oce", "--local", "--json", "--command", `SELECT COUNT(*) AS n FROM ${table}`]);
   const json = JSON.parse(sortie.slice(sortie.indexOf("[")));
   return Number(json[0].results[0].n);
 }

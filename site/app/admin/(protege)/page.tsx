@@ -1,20 +1,14 @@
 import Link from "next/link";
 import { listerArticlesAdmin } from "@/lib/db/articles";
-import { etatPublication, lireIssue, type EtatSite, type IssuePublication } from "@/lib/publication/serveur";
+import { etatPublication, lireIssue, type EtatSite } from "@/lib/publication/serveur";
 import { exigerSession } from "@/lib/session";
+import { MessageEnregistrement } from "./MessageSite";
 import { relancerPublication } from "./publication";
 
 const dateCourte = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 const dateHeure = new Intl.DateTimeFormat("fr-FR", {
   day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris",
 });
-
-// Ce que devient le site public après l'enregistrement (D-21 : il est republié en ≈ 3 min).
-const MESSAGES_SITE: Record<IssuePublication, string> = {
-  demandee: "Le site public sera à jour d’ici 3 minutes environ.",
-  echec: "La mise à jour du site public n’a pas pu être lancée. Vos changements sont bien enregistrés : réessayez avec « Mettre à jour le site ».",
-  locale: "En local, le site public n’est pas republié.",
-};
 
 function EtatDuSite({ etat }: { etat: EtatSite }) {
   if (!etat.configuree) return null;
@@ -62,14 +56,7 @@ export default async function Administration({ searchParams }: PageProps<"/admin
         <Link href="/admin/articles/nouveau" className="bouton">Nouvel article</Link>
       </div>
 
-      {message && (
-        <div className={`message-info${issue === "echec" ? " message-avertissement" : ""}`}>
-          <p role="status">{message}</p>
-          {issue && (
-            <p data-testid="message-site" role={issue === "echec" ? "alert" : undefined}>{MESSAGES_SITE[issue]}</p>
-          )}
-        </div>
-      )}
+      {message && <MessageEnregistrement message={message} issue={issue} />}
 
       <EtatDuSite etat={etat} />
 

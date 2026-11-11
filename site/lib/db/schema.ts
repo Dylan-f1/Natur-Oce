@@ -1,4 +1,4 @@
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { blob, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 // Schéma D1 de Natur'Océ (specs/SPEC-base-donnees.md). Dates en millisecondes.
 // Les longueurs maximales sont contrôlées côté application (lib/*/validation).
@@ -133,4 +133,19 @@ export const rateLimit = sqliteTable("rate_limit", {
   key: text("key").notNull().unique(),
   count: integer("count").notNull(),
   lastRequest: integer("last_request").notNull(),
+});
+
+/**
+ * Images des articles (specs/SPEC-images.md, D-22) : rangées ici plutôt que dans R2, figées en
+ * fichiers statiques à chaque publication (D-21). `cle` = `<uuid>.webp` ou `<uuid>.jpg`.
+ * La description (alt) reste dans l'article : une même image peut servir deux fois.
+ */
+export const image = sqliteTable("image", {
+  cle: text("cle").primaryKey(),
+  type: text("type", { enum: ["image/webp", "image/jpeg"] }).notNull(),
+  donnees: blob("donnees", { mode: "buffer" }).notNull(), // ≤ 1,5 Mo (lib/images.ts)
+  largeur: integer("largeur").notNull(),
+  hauteur: integer("hauteur").notNull(),
+  taille: integer("taille").notNull(),
+  creeLe: integer("cree_le").notNull(),
 });
