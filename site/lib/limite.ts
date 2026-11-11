@@ -1,18 +1,18 @@
 import { sql } from "drizzle-orm";
+import { env } from "@/lib/cloudflare";
 import { db } from "@/lib/db";
 import { limite } from "@/lib/db/schema";
+import { empreinte } from "@/lib/empreinte";
 
 // Limites du site (specs/SPEC-connexion.md, specs/SPEC-contact.md) : fenêtre fixe par clé.
 
-/** Empreinte SHA-256 (hex) : la base ne garde jamais l'IP ni l'adresse en clair. */
-export async function empreinte(texte: string): Promise<string> {
-  const octets = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(texte));
-  return [...new Uint8Array(octets)].map((o) => o.toString(16).padStart(2, "0")).join("");
-}
-
-/** Clé d'une limite : usage (« lien », « contact ») + valeur (IP, adresse normalisée). */
+/**
+ * Clé d'une limite : HMAC de l'usage (« lien-ip », « contact-ip ») et de la valeur (IP).
+ * La clé secrète est celle des sessions (BETTER_AUTH_SECRET) : la base ne permet jamais de
+ * retrouver une IP sans elle.
+ */
 export async function cleLimite(usage: string, valeur: string): Promise<string> {
-  return empreinte(`natur-oce:${usage}:${valeur}`);
+  return empreinte(`natur-oce:limite:${usage}:${valeur}`, (await env()).BETTER_AUTH_SECRET);
 }
 
 /**

@@ -15,8 +15,8 @@ export const tarif = sqliteTable("tarif", {
 export type Tarif = typeof tarif.$inferSelect;
 
 /**
- * Compteurs de limite du site (demandes de lien, formulaire de contact). `cle` = empreinte
- * SHA-256 de l'usage et de l'IP ou de l'adresse : jamais d'IP ni d'adresse en clair (RGPD).
+ * Compteurs de limite du site (demandes de lien, formulaire de contact). `cle` = HMAC-SHA-256
+ * (clé secrète du site) de l'usage et de l'IP : impossible de retrouver l'IP sans la clé (RGPD).
  */
 export const limite = sqliteTable("limite", {
   cle: text("cle").primaryKey(),
