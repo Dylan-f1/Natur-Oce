@@ -3,6 +3,11 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"main": ".open-next/worker.js",
 	"name": "natur-oce",
+	// Adresse du site (J5, 11/11/2026) : domaine personnalisé, Cloudflare crée l'enregistrement DNS
+	// et le certificat. www.natur-oce.fr renvoie vers ici par une règle de redirection de la zone.
+	// L'adresse workers.dev reste ouverte (essais, lien de secours).
+	"routes": [{ "pattern": "natur-oce.fr", "custom_domain": true }],
+	"workers_dev": true,
 	"compatibility_date": "2026-11-01",
 	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
 	"assets": {
@@ -35,7 +40,6 @@
 			"name": "EMAIL"
 		}
 	]
-	// À venir : bucket R2 (images, T10).
 	// Pas de binding "images" : l'optimisation Cloudflare Images est facturée au-delà d'un quota ;
 	// les images sont redimensionnées à l'avance (RSE-01).
 }
