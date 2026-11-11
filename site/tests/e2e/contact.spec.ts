@@ -103,6 +103,17 @@ test.describe("Demande de séance", () => {
     await expect(page.locator("#contact").getByLabel("Votre message")).toHaveValue("Encore moi.");
   });
 
+  test("un envoi démesuré est refusé avant d'être lu, sans rien envoyer (revue)", async ({ request }) => {
+    const depuis = Date.now();
+    const reponse = await request.post("/api/contact", {
+      form: { prenom: "Léa", email: "lea@exemple.test", disponibilites: "", message: "x".repeat(20_000), site: "" },
+      headers: { origin: ORIGINE, accept: "application/json" },
+    });
+    expect(reponse.status()).toBe(413);
+    expect(emailsDepuis(depuis)).toBe(0);
+    expect(lignesLocales("SELECT cle FROM limite")).toHaveLength(0); // pas même compté
+  });
+
   test("un envoi depuis un autre site est refusé", async ({ request }) => {
     const reponse = await request.post("/api/contact", {
       form: { prenom: "X", email: "x@exemple.test", disponibilites: "", message: "x", site: "" },
@@ -131,7 +142,13 @@ test.describe("Demande de séance", () => {
       await expect(page).toHaveURL(/127\.0\.0\.1:8791\/$/); // resté sur l'accueil
       expect(await page.locator("#contact-prenom").evaluate((e) => (e as HTMLInputElement).validity.valueMissing)).toBe(true);
 
-      await remplir(page, { prenom: "Léa", email: "lea@exemple.test", message: "Bonjour sans JavaScript." });
+      // « lea@exemple » passe la règle HTML de base, pas celle du site : le motif la refuse (revue).
+      await remplir(page, { prenom: "Léa", email: "lea@exemple", message: "Bonjour sans JavaScript." });
+      await envoyer(page);
+      await expect(page).toHaveURL(/127\.0\.0\.1:8791\/$/);
+      expect(await page.locator("#contact-email").evaluate((e) => (e as HTMLInputElement).validity.patternMismatch)).toBe(true);
+
+      await remplir(page, { email: "lea@exemple.test" });
       const depuis = Date.now();
       await envoyer(page);
       await expect(page).toHaveURL(/\/contact\/envoyee$/);

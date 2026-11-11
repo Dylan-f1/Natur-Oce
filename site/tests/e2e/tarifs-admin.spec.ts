@@ -126,6 +126,21 @@ test.describe("Tarifs dans l'administration", () => {
     await expect(page.locator(".tarifs")).toHaveText("Tarifs sur demande");
   });
 
+  test("base illisible → message d'erreur et aucun formulaire : rien ne peut écraser les tarifs (revue)", async ({ page }) => {
+    await seConnecter(page);
+    sqlLocal("ALTER TABLE tarif RENAME TO tarif_cache;"); // simule une panne de lecture
+    try {
+      await page.goto("/admin/tarifs");
+      await expect(page.getByRole("main").getByRole("alert")).toHaveText("Les tarifs n’ont pas pu être lus. Rien n’a été modifié : rechargez la page dans un instant.");
+      await expect(page.getByRole("button", { name: "Enregistrer les tarifs" })).toHaveCount(0);
+      await expect(page.getByTestId("ligne-tarif")).toHaveCount(0);
+      await expect(page.getByText("Aucun tarif : l’accueil affiche")).toHaveCount(0); // pas la fausse liste vide
+    } finally {
+      sqlLocal("ALTER TABLE tarif_cache RENAME TO tarif;");
+    }
+    expect(enBase()).toHaveLength(2); // intacts
+  });
+
   test("sans session, la page des tarifs renvoie vers la connexion", async ({ request }) => {
     const reponse = await request.get("/admin/tarifs", { maxRedirects: 0 });
     expect(reponse.status()).toBe(307);

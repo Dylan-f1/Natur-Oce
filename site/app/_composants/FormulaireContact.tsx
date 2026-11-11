@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { CHAMP_PIEGE, LIMITES_CONTACT, validerDemande, type ErreursContact } from "@/lib/contact";
+import { CHAMP_PIEGE, LIMITES_CONTACT, MOTIF_EMAIL, validerDemande, type ErreursContact } from "@/lib/contact";
 import "./formulaire-contact.css";
 
 // Demande de séance (specs/SPEC-contact.md, EF-04, RSE-04) : 4 champs, aucune question de santé.
@@ -92,7 +92,8 @@ export function FormulaireContact() {
         </div>
         <div className="champ-contact">
           <label htmlFor="contact-email">E-mail</label>
-          <input id="contact-email" name="email" type="email" required maxLength={254} autoComplete="email" {...aria("email")} />
+          <input id="contact-email" name="email" type="email" required maxLength={254} autoComplete="email" pattern={MOTIF_EMAIL}
+            title="Adresse complète, par exemple prenom@exemple.fr" {...aria("email")} />
           {erreur("email")}
         </div>
       </div>

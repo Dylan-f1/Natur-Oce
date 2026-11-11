@@ -1,5 +1,5 @@
 import { origineDesEntetes } from "@/lib/auth";
-import { LIMITE_ENVOIS, validerDemande, type ErreursContact } from "@/lib/contact";
+import { LIMITE_ENVOIS, TAILLE_MAX_DEMANDE, validerDemande, type ErreursContact } from "@/lib/contact";
 import { envoyerAOceane } from "@/lib/email";
 import { modeleDemandeSeance } from "@/lib/email/modeles";
 import { cleLimite, compterTentative, ipDuVisiteur } from "@/lib/limite";
@@ -29,6 +29,12 @@ export async function POST(requete: Request): Promise<Response> {
   // Le formulaire du site seulement : une page d'un autre site ne peut pas s'en servir.
   if (requete.headers.get("origin") !== origine) {
     return Response.json({ ok: false, general: "Envoi refusé." }, { status: 403 });
+  }
+
+  // Taille annoncée vérifiée avant toute lecture : un corps démesuré ne coûte rien au Worker.
+  const taille = Number(requete.headers.get("content-length"));
+  if (!Number.isFinite(taille) || taille <= 0 || taille > TAILLE_MAX_DEMANDE) {
+    return repondre(413, { ok: false, general: ECHEC_ENVOI });
   }
 
   let donnees: FormData;

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { LIMITES_CONTACT, LIMITE_ENVOIS, validerDemande } from "@/lib/contact";
+import { LIMITES_CONTACT, LIMITE_ENVOIS, MOTIF_EMAIL, TAILLE_MAX_DEMANDE, validerDemande } from "@/lib/contact";
+import { adresseValide } from "@/lib/email/modeles";
 import { modeleDemandeSeance, preparerEnvoi } from "@/lib/email/modeles";
 
 // T12 · Formulaire de demande de séance (specs/SPEC-contact.md, EF-04, ENF-04, RSE-04).
@@ -75,5 +76,25 @@ describe("limite et message envoyé", () => {
     const envoi = preparerEnvoi(modeleDemandeSeance(r.demande), "oceane@exemple.test");
     expect(envoi.replyTo).toBe("lea@exemple.test");
     expect(envoi.to).toBe("oceane@exemple.test");
+  });
+});
+
+describe("garde-fous de l'envoi (revue du point de contrôle final)", () => {
+  it("le motif HTML du champ e-mail suit exactement la règle du serveur (même sans JavaScript)", () => {
+    // Comme le navigateur : motif ancré, drapeau v.
+    const motif = new RegExp(`^(?:${MOTIF_EMAIL})$`, "v");
+    for (const adresse of ["lea@exemple.test", "sophie.durand@exemple.fr", "o'brien@exemple.test", "lea@exemple", "lea@", "@exemple.fr", "lea @exemple.fr", "lea@ex<ample.fr", "a@b.c"]) {
+      expect(motif.test(adresse), adresse).toBe(adresseValide(adresse));
+    }
+    expect(motif.test("sophie@exemple.fr")).toBe(true); // une adresse avec des « s » passe
+  });
+
+  it("un envoi complet tient largement sous le plafond lu avant tout traitement", () => {
+    expect(TAILLE_MAX_DEMANDE).toBe(16_384);
+    const corps = new URLSearchParams({
+      prenom: "x".repeat(LIMITES_CONTACT.prenom), email: "x".repeat(240) + "@exemple.fr",
+      disponibilites: "x".repeat(LIMITES_CONTACT.disponibilites), message: "é".repeat(LIMITES_CONTACT.message), site: "",
+    }).toString();
+    expect(new TextEncoder().encode(corps).length).toBeLessThan(TAILLE_MAX_DEMANDE);
   });
 });

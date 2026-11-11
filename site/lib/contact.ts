@@ -8,6 +8,19 @@ export const LIMITES_CONTACT = { prenom: 60, disponibilites: 200, message: 1500 
 /** 5 envois par heure et par adresse IP (ENF-04). */
 export const LIMITE_ENVOIS = { max: 5, fenetreMs: 60 * 60 * 1000 } as const;
 
+/**
+ * Taille maximale d'un envoi, vérifiée avant de lire le corps (revue) : un message complet en fait
+ * moins de 4 Ko ; au-delà, c'est un abus, refusé sans rien lire.
+ */
+export const TAILLE_MAX_DEMANDE = 16_384;
+
+/**
+ * Motif HTML du champ e-mail : la même règle que le serveur (adresseValide), pour que le
+ * navigateur refuse lui-même « lea@exemple » même sans JavaScript (revue). Échappements valables
+ * pour l'attribut `pattern` (drapeau v des navigateurs récents).
+ */
+export const MOTIF_EMAIL = String.raw`[^\s@<>,;"]+@[^\s@<>,;"]+\.[^\s@<>,;"]+`;
+
 /** Nom du champ piège : invisible pour les visiteurs, rempli par les robots. */
 export const CHAMP_PIEGE = "site";
 
