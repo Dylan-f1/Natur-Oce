@@ -12,6 +12,7 @@ import {
   supprimerArticle,
   type NouvelArticle,
 } from "@/lib/db/articles";
+import { lancerPublication } from "@/lib/publication/serveur";
 import { exigerSession } from "@/lib/session";
 import { NOUVELLE } from "./constantes";
 
@@ -113,7 +114,9 @@ export async function enregistrerNouvelArticle(_etat: EtatFormulaire, donnees: F
     console.error("[articles] enregistrement impossible", erreur);
     return { erreurs: { general: ECHEC }, valeurs: p.valeurs };
   }
-  redirect(`/admin?${p.publier ? "publie" : "enregistre"}=${encodeURIComponent(slug)}`);
+  // Un brouillon jamais publié ne change pas le site public : pas de publication (D-21).
+  const site = p.publier ? `&site=${await lancerPublication()}` : "";
+  redirect(`/admin?${p.publier ? "publie" : "enregistre"}=${encodeURIComponent(slug)}${site}`);
 }
 
 /**
@@ -140,17 +143,19 @@ export async function enregistrerArticle(id: string, _etat: EtatFormulaire, donn
 
   const etaitPublie = actuel.statut === "publie";
   const message = p.publier ? (etaitPublie ? "modifie" : "publie") : etaitPublie ? "depublie" : "enregistre";
-  redirect(`/admin?${message}=${encodeURIComponent(slug)}`);
+  const site = etaitPublie || p.publier ? `&site=${await lancerPublication()}` : ""; // le site public change
+  redirect(`/admin?${message}=${encodeURIComponent(slug)}${site}`);
 }
 
 /** Supprime définitivement un article, après confirmation dans la page. */
 export async function supprimerArticleAction(id: string): Promise<void> {
   await exigerSession();
+  const etaitPublie = (await articleParId(id))?.statut === "publie";
   try {
     await supprimerArticle(id); // déjà supprimé : même issue, l'article n'est plus là
   } catch (erreur) {
     console.error("[articles] suppression impossible", erreur);
     redirect(`/admin/articles/${encodeURIComponent(id)}?erreur=suppression`);
   }
-  redirect("/admin?supprime=1");
+  redirect(`/admin?supprime=1${etaitPublie ? `&site=${await lancerPublication()}` : ""}`);
 }

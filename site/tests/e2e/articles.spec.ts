@@ -57,7 +57,7 @@ test.describe("Articles : créer et publier", () => {
     await page.keyboard.type(" étape <script>alert(1)</script>");
     await page.getByRole("button", { name: "Publier" }).click();
 
-    await expect(page).toHaveURL(/\/admin\?publie=recuperation-sommeil-du-sportif$/);
+    await expect(page).toHaveURL(/\/admin\?publie=recuperation-sommeil-du-sportif&site=demandee$/);
     await expect(page.getByRole("main").getByRole("status")).toHaveText("L’article est publié.");
 
     const [ligne] = lignesLocales<LigneArticle>(

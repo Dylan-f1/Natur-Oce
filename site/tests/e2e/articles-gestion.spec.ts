@@ -90,8 +90,8 @@ test.describe("Articles : modifier, dépublier, supprimer", () => {
     await page.keyboard.type("Version deux.");
     await page.getByRole("button", { name: "Enregistrer les modifications" }).click();
 
-    await expect(page).toHaveURL(/\/admin\?modifie=bien-dormir$/);
-    await expect(page.getByRole("main").getByRole("status")).toHaveText("Les modifications sont en ligne.");
+    await expect(page).toHaveURL(/\/admin\?modifie=bien-dormir&site=demandee$/);
+    await expect(page.getByRole("main").getByRole("status")).toHaveText("Les modifications sont enregistrées.");
     expect(ligne("a-dormir")).toMatchObject({ slug: "bien-dormir", statut: "publie", publie_le: ms("2026-11-01") });
 
     await page.goto("/conseils/bien-dormir");
@@ -104,15 +104,15 @@ test.describe("Articles : modifier, dépublier, supprimer", () => {
     await ouvrir(page, "Mieux dormir après l’effort");
     await page.getByRole("button", { name: "Dépublier" }).click();
 
-    await expect(page).toHaveURL(/\/admin\?depublie=bien-dormir$/);
-    await expect(page.getByRole("main").getByRole("status")).toHaveText("L’article n’est plus en ligne : il reste dans vos brouillons.");
+    await expect(page).toHaveURL(/\/admin\?depublie=bien-dormir&site=demandee$/);
+    await expect(page.getByRole("main").getByRole("status")).toHaveText("L’article est dépublié : il reste dans vos brouillons.");
     expect((await request.get("/conseils/bien-dormir")).status()).toBe(404);
     expect(ligne("a-dormir")).toMatchObject({ statut: "brouillon", titre: "Mieux dormir après l’effort", contenu_html: "<p>Version deux.</p>" });
 
     // Le titre a changé, mais l'adresse a été figée à la 1re publication (EF-07).
     await ouvrir(page, "Mieux dormir après l’effort");
     await page.getByRole("button", { name: "Publier", exact: true }).click();
-    await expect(page).toHaveURL(/\/admin\?publie=bien-dormir$/);
+    await expect(page).toHaveURL(/\/admin\?publie=bien-dormir&site=demandee$/);
     expect((await request.get("/conseils/bien-dormir")).status()).toBe(200);
   });
 
