@@ -1,0 +1,39 @@
+/* Administration de Natur'Océ — mode « Operate » : mêmes couleurs et polices que l'herbier
+   (variables de globals.css), en version sobre. Pas de nouvelle direction artistique. */
+
+.admin { min-height: 100svh; background: var(--papier); }
+
+.admin-cadre {
+  width: 100%; max-width: 72rem; margin: 0 auto;
+  padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+}
+
+.admin-entete { background: var(--olive-fonce); color: var(--papier); }
+.admin-entete .admin-cadre {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 2rem; min-height: 4rem;
+}
+.admin-marque { font: 400 1.15rem/1.2 var(--titre); color: var(--papier); text-decoration: none; margin-right: auto; padding-block: 0.75rem; }
+.admin-entete nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 1.5rem; }
+.admin-entete nav a { color: var(--papier); text-decoration: none; display: inline-block; padding-block: 0.75rem; }
+.admin-session { display: flex; align-items: center; gap: 1rem; margin: 0; }
+.admin-qui { font-size: 0.95rem; color: #E6DCC4; overflow-wrap: anywhere; }
+.admin-lien {
+  font: inherit; color: var(--papier); background: none; border: 0; padding: 0.75rem 0;
+  text-decoration: underline; text-underline-offset: 4px; cursor: pointer; touch-action: manipulation;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .admin-entete nav a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .admin-lien:hover { color: #E6DCC4; }
+}
+
+.admin-entete :focus-visible { outline: 2px solid var(--or-clair); outline-offset: 3px; }
+
+.admin-contenu { padding-block: clamp(2rem, 6vw, 3.5rem); }
+.admin-contenu h1 { font: 400 clamp(1.9rem, 5vw, 2.6rem)/1.1 var(--titre); color: var(--olive-fonce); margin: 0 0 1rem; }
+
+@media (max-width: 640px) {
+  .admin-entete .admin-cadre { gap: 0 1.25rem; }
+  .admin-marque { width: 100%; }
+}
