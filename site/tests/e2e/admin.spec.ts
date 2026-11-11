@@ -44,6 +44,30 @@ test.describe("Administration protégée", () => {
     await expect(page).toHaveURL(/\/admin\/connexion$/);
   });
 
+  test("la route HTTP de demande de lien est fermée et n'enregistre rien (revue, point 2)", async ({ request }) => {
+    viderLimites();
+    const avant = compterLignes("verification");
+    const reponse = await request.post("/api/auth/sign-in/magic-link", {
+      data: { email: "quelquun@exemple.test" },
+      headers: { origin: "http://127.0.0.1:8791" },
+    });
+    expect(reponse.status()).toBe(404);
+    expect(compterLignes("verification")).toBe(avant);
+  });
+
+  test("le limiteur de Better Auth refuse au-delà de 60 requêtes par minute et par IP (revue, point 3)", async ({ request }) => {
+    viderLimites();
+    // IP de documentation (RFC 5737) : sans IP, Better Auth ne limite pas, d'où ce test explicite.
+    const entetes = { "cf-connecting-ip": "203.0.113.7" };
+    const statuts: number[] = [];
+    for (let i = 0; i < 62; i++) {
+      statuts.push((await request.get("/api/auth/get-session", { headers: entetes })).status());
+    }
+    expect(statuts.slice(0, 60).every((s) => s === 200)).toBe(true);
+    expect(statuts.at(-1)).toBe(429);
+    expect(compterLignes("rate_limit")).toBeGreaterThan(0); // compteurs bien écrits dans D1
+  });
+
   test("la 4e demande de lien en 15 min est refusée", async ({ page }) => {
     viderLimites();
     for (let i = 1; i <= 3; i++) {
