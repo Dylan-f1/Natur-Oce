@@ -15,6 +15,10 @@
   },
   "dependencies": {
     "@opennextjs/cloudflare": "1.20.16",
+    "@tiptap/core": "3.32.3",
+    "@tiptap/pm": "3.32.3",
+    "@tiptap/react": "3.32.3",
+    "@tiptap/starter-kit": "3.32.3",
     "better-auth": "1.7.18",
     "drizzle-orm": "0.45.4",
     "next": "16.4.6",

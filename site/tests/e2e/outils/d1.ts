@@ -23,6 +23,16 @@ export function sqlLocal(sql: string): void {
   });
 }
 
+/** Lignes renvoyées par une requête SELECT sur la base locale (SQL écrit par le test). */
+export function lignesLocales<T = Record<string, unknown>>(select: string): T[] {
+  const sortie = execFileSync(
+    process.execPath,
+    [wrangler, "d1", "execute", "natur-oce", "--local", "--json", "--command", select],
+    { cwd: racine, stdio: "pipe", encoding: "utf8" },
+  );
+  return JSON.parse(sortie.slice(sortie.indexOf("[")))[0].results as T[];
+}
+
 /** Nombre de lignes d'une table de la base locale (nom de table contrôlé, pas d'injection). */
 export function compterLignes(table: string): number {
   if (!/^[a-z_]+$/.test(table)) throw new Error(`Nom de table refusé : ${table}`);
