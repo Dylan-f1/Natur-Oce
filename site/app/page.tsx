@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { connection } from "next/server";
 import { listerArticlesPublies } from "@/lib/db/articles";
 import { listerTarifs } from "@/lib/db/tarifs";
@@ -154,7 +153,7 @@ export default async function Accueil() {
           <div className="cadre">
             <div className="entete-section">
               <h2 id="titre-conseils">Conseils</h2>
-              <Link className="lien-or" href="/conseils">Tous les articles</Link>
+              <a className="lien-or" href="/conseils">Tous les articles</a>
             </div>
             <div className="planches">
               {articles.map((a) => (

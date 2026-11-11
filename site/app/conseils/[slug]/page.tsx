@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { cache } from "react";
@@ -36,7 +35,7 @@ export default async function PageArticle({ params }: PageProps<"/conseils/[slug
       <EnTete />
       <main className="cadre page-conseils">
         <article className="lecture">
-          <p className="fil-ariane"><Link href="/conseils">Conseils</Link></p>
+          <p className="fil-ariane"><a href="/conseils">Conseils</a></p>
           <h1 className="titre-page">{article.titre}</h1>
           <dl className="lecture-etiquette">
             {article.categorie && (
@@ -44,7 +43,7 @@ export default async function PageArticle({ params }: PageProps<"/conseils/[slug
                 <dt>Catégorie</dt>
                 <dd>
                   {article.categorieSlug ? (
-                    <Link href={`/conseils?categorie=${article.categorieSlug}`}>{article.categorie}</Link>
+                    <a href={`/conseils/categorie/${article.categorieSlug}`}>{article.categorie}</a>
                   ) : (
                     article.categorie
                   )}
@@ -64,7 +63,7 @@ export default async function PageArticle({ params }: PageProps<"/conseils/[slug
             La naturopathie ne remplace pas un avis médical : continuez vos traitements et consultez
             votre médecin.
           </p>
-          <Link className="retour-conseils" href="/conseils">Tous les conseils</Link>
+          <a className="retour-conseils" href="/conseils">Tous les conseils</a>
         </article>
       </main>
       <PiedDePage />
