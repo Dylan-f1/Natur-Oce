@@ -8,6 +8,8 @@ import "./formulaire-contact.css";
 // Sans JavaScript, c'est un formulaire HTML classique vers /api/contact, contrôlé par le
 // navigateur. Avec JavaScript, l'envoi se fait en arrière-plan : erreurs sous les champs,
 // confirmation à la place du formulaire, saisie jamais perdue.
+// Replié au départ (demande de Dylan du 12/11) : il s'ouvre avec « Demander une séance », ici ou
+// depuis n'importe quel lien vers #contact. Sans JavaScript, il reste ouvert (balise noscript).
 
 const ECHEC = "L’envoi a échoué. Réessayez, ou écrivez à contact@natur-oce.fr.";
 const ORDRE: (keyof ErreursContact)[] = ["prenom", "email", "disponibilites", "message"];
@@ -21,6 +23,50 @@ export function FormulaireContact() {
   const [general, setGeneral] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
   const [envoyee, setEnvoyee] = useState(false);
+  const [ouvert, setOuvert] = useState(false);
+  const [vientDOuvrir, setVientDOuvrir] = useState(false);
+
+  // Tous les « Demander une séance » de la page mènent à #contact : ils ouvrent aussi le formulaire.
+  useEffect(() => {
+    const ouvrirDepuisLien = () => {
+      setOuvert(true);
+      setVientDOuvrir(true);
+    };
+    // Arrivée directe sur /#contact : ouvert, sans animation (hors de l'effet lui-même).
+    const arrivee = setTimeout(() => {
+      if (location.hash === "#contact") setOuvert(true);
+    }, 0);
+    const surClic = (ev: MouseEvent) => {
+      const lien = (ev.target as Element | null)?.closest?.('a[href$="#contact"]');
+      if (lien) ouvrirDepuisLien();
+    };
+    const surHash = () => {
+      if (location.hash === "#contact") ouvrirDepuisLien();
+    };
+    document.addEventListener("click", surClic);
+    addEventListener("hashchange", surHash);
+    return () => {
+      clearTimeout(arrivee);
+      document.removeEventListener("click", surClic);
+      removeEventListener("hashchange", surHash);
+    };
+  }, []);
+
+  const focusApresOuverture = useRef(false);
+  function ouvrir() {
+    focusApresOuverture.current = true;
+    setOuvert(true);
+    setVientDOuvrir(true);
+  }
+
+  // Ouvert par le bouton, qui disparaît : le clavier passe au premier champ. Ouvert par un lien,
+  // on ne place pas le curseur (sur téléphone, le clavier surgirait).
+  useEffect(() => {
+    if (ouvert && focusApresOuverture.current) {
+      focusApresOuverture.current = false;
+      formulaire.current?.querySelector<HTMLElement>('[name="prenom"]')?.focus({ preventScroll: true });
+    }
+  }, [ouvert]);
 
   // Avec JavaScript, nos messages remplacent ceux du navigateur (plus précis, en français du site).
   useEffect(() => {
@@ -81,7 +127,16 @@ export function FormulaireContact() {
     erreurs[champ] && <p id={`contact-${champ}-erreur`} className="erreur-champ">{erreurs[champ]}</p>;
 
   return (
-    <form ref={formulaire} action="/api/contact" method="post" className="formulaire-contact" onSubmit={envoyer}>
+    <>
+      {!ouvert && (
+        <button type="button" className="bouton ouvrir-contact" aria-expanded="false" aria-controls="formulaire-contact" onClick={ouvrir}>
+          Demander une séance
+        </button>
+      )}
+      {/* Sans JavaScript : formulaire ouvert, bouton masqué (le bouton ne ferait rien). */}
+      <noscript dangerouslySetInnerHTML={{ __html: "<style>.formulaire-contact.replie{display:grid}.ouvrir-contact{display:none}</style>" }} />
+    <form ref={formulaire} id="formulaire-contact" action="/api/contact" method="post" onSubmit={envoyer}
+      className={["formulaire-contact", ouvert ? "" : "replie", vientDOuvrir ? "vient-d-ouvrir" : ""].filter(Boolean).join(" ")}>
       {general && <p role="alert" className="erreur-generale">{general}</p>}
 
       <div className="champs-contact">
@@ -125,5 +180,6 @@ export function FormulaireContact() {
         {enCours && <span role="status">Envoi en cours…</span>}
       </div>
     </form>
+    </>
   );
 }

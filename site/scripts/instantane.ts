@@ -72,7 +72,7 @@ function lireLignes(): LigneInstantane[] {
 }
 
 function demarrerServeur(): ChildProcess {
-  return spawn(process.execPath, [wrangler, "dev", "--port", String(PORT), "--ip", "127.0.0.1"], {
+  return spawn(process.execPath, [wrangler, "dev", "--port", String(PORT), "--ip", "127.0.0.1", "--infer-origin-from-routes=false"], {
     cwd: racine,
     stdio: "ignore",
     detached: process.platform !== "win32", // groupe de processus, pour arrêter aussi workerd

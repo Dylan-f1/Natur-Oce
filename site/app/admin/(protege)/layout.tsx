@@ -23,6 +23,7 @@ export default async function MiseEnPageAdmin({ children }: LayoutProps<"/admin"
             <ul>
               <li><Link href="/admin">Articles</Link></li>
               <li><Link href="/admin/tarifs">Tarifs</Link></li>
+              <li><Link href="/admin/textes">Textes</Link></li>
               <li><Link href="/" target="_blank" rel="noopener">Voir le site</Link></li>
             </ul>
           </nav>

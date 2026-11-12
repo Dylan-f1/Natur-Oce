@@ -22,7 +22,8 @@ test.describe("Accueil", () => {
       await expect(lien).toHaveText("Demander une séance");
       await expect(lien).toHaveAttribute("href", /#contact$/);
     }
-    await expect(page.locator("button.bouton")).toHaveText(["Envoyer ma demande"]); // le seul autre : l'envoi du formulaire
+    // Les deux autres : le bouton qui ouvre le formulaire replié (même libellé), puis son envoi.
+    await expect(page.locator("button.bouton")).toHaveText(["Demander une séance", "Envoyer ma demande"]);
     await expect(page.locator("#contact form")).toHaveCount(1);
   });
 

@@ -151,6 +151,15 @@ a.liste-titre:focus-visible { outline: 2px solid var(--olive); outline-offset: 3
 /* ---------- Tarifs (T11) ---------- */
 .intro-tarifs { max-width: 48rem; margin: -0.5rem 0 1.5rem; }
 .formulaire-tarifs { max-width: 56rem; }
+
+/* Textes de l'accueil (EF-19) */
+.charte { max-width: 48rem; }
+.charte p { margin: 0; }
+.section-textes { border: 0; border-top: 1px solid var(--filet); margin: 0; padding: 1.25rem 0 0; display: grid; gap: 1.5rem; min-width: 0; }
+.section-textes legend { font: 400 1.35rem/1.2 var(--titre); color: var(--olive-fonce); padding: 0 0.75rem 0 0; }
+.formulaire-textes .champ textarea, .formulaire-textes .champ input { width: 100%; min-width: 0; line-height: 1.55; }
+.compteur { font-size: 0.9rem; color: #5C6448; margin: 0; font-variant-numeric: tabular-nums; }
+.compteur-trop { color: #8A2F14; font-weight: 500; }
 .liste-tarifs { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
 .liste-tarifs fieldset { margin: 0; padding: 1rem 1.1rem 0.75rem; border: 1px solid var(--filet); background: #FFFDF8; min-width: 0; }
 .liste-tarifs legend { padding: 0 0.35rem; font: 400 1.05rem/1.2 var(--titre); color: var(--olive-fonce); }
