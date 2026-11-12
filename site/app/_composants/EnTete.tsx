@@ -20,6 +20,7 @@ export function EnTete() {
         <ul>
           <li><a href="/#approche">Approche</a></li>
           <li><a href="/#sport">Sportifs</a></li>
+          <li><a href="/#stress">Stress</a></li>
           <li><a href="/#seances">Séances</a></li>
           <li><a href="/conseils">Conseils</a></li>
         </ul>
