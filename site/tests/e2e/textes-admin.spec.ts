@@ -32,7 +32,7 @@ test.describe("Textes de l'accueil", () => {
     await page.goto("/");
     await expect(page.locator("main")).not.toContainText("FOURNIR");
     await expect(page.locator("#sport")).toContainText("Que vous prépariez une course");
-    await expect(page.locator(".sport-themes li")).toHaveCount(3);
+    await expect(page.locator("#sport .sport-themes li")).toHaveCount(3);
     await expect(page.locator("#approche")).toContainText("Formée à la naturopathie de 2020 à 2023.");
     await expect(page.locator("#seances")).toContainText("Je vous réponds par mail avec un lien de visio.");
     await expect(page.locator("#seances")).not.toContainText("Durée");
@@ -45,7 +45,7 @@ test.describe("Textes de l'accueil", () => {
   test("Given des textes modifiés, When Océane enregistre, Then ils sont en base, sur l'accueil, et le site est republié (EF-19)", async ({ page }) => {
     await ouvrirTextes(page);
     await page.getByLabel("Votre présentation et votre parcours").fill("Je suis Océane.\n\n\nJ’accompagne les sportifs.");
-    await page.getByLabel("Ce que l’on travaille ensemble").fill("- Le sommeil\n\n- La récupération");
+    await page.getByLabel("Ce que l’on travaille ensemble", { exact: true }).fill("- Le sommeil\n\n- La récupération");
     await page.getByLabel("Outil de visio").fill("Google Meet");
     await page.getByLabel("Durée du bilan").fill("1 h 30.");
     await page.getByLabel("Votre formation").fill("");
@@ -56,13 +56,13 @@ test.describe("Textes de l'accueil", () => {
     expect(valeurEnBase("approche")).toBe("Je suis Océane.\n\nJ’accompagne les sportifs.");
     expect(valeurEnBase("themes")).toBe("Le sommeil\nLa récupération");
     expect(valeurEnBase("formation")).toBe("");
-    expect(enBase()).toHaveLength(6);
+    expect(enBase()).toHaveLength(8);
     expect(await appelsPublication()).toHaveLength(1);
 
     await page.goto("/");
     await expect(page.locator("#approche .col-corps p")).toHaveText(["Je suis Océane.", "J’accompagne les sportifs."]);
     await expect(page.locator("#approche")).not.toContainText("Formée");
-    await expect(page.locator(".sport-themes li")).toHaveText(["Le sommeil", "La récupération"]);
+    await expect(page.locator("#sport .sport-themes li")).toHaveText(["Le sommeil", "La récupération"]);
     await expect(page.locator("#seances")).toContainText("Je vous réponds par mail avec un lien de visio Google Meet.");
     await expect(page.locator("#seances")).toContainText("Durée 1 h 30. On fait le point");
   });
@@ -70,20 +70,20 @@ test.describe("Textes de l'accueil", () => {
   test("champ vidé → la phrase ou la liste disparaît de l'accueil", async ({ page }) => {
     await ouvrirTextes(page);
     await page.getByLabel("Votre texte sur l’accompagnement des sportifs").fill("");
-    await page.getByLabel("Ce que l’on travaille ensemble").fill("");
+    await page.getByLabel("Ce que l’on travaille ensemble", { exact: true }).fill("");
     await page.getByRole("button", { name: "Enregistrer les textes" }).click();
     await expect(page).toHaveURL(/enregistre=1/);
 
     await page.goto("/");
-    await expect(page.locator(".sport-titre p")).toHaveCount(0);
-    await expect(page.locator(".sport-themes")).toHaveCount(0);
+    await expect(page.locator("#sport .sport-titre p")).toHaveCount(0);
+    await expect(page.locator("#sport .sport-themes")).toHaveCount(0);
     await expect(page.locator("#sport").getByRole("link", { name: "Demander une séance" })).toBeVisible();
   });
 
   test("trop long ou plus de 6 thèmes → champ signalé, saisie gardée, rien d'écrit", async ({ page }) => {
     await ouvrirTextes(page);
     await page.getByLabel("Outil de visio").fill("x".repeat(45));
-    await page.getByLabel("Ce que l’on travaille ensemble").fill("1\n2\n3\n4\n5\n6\n7");
+    await page.getByLabel("Ce que l’on travaille ensemble", { exact: true }).fill("1\n2\n3\n4\n5\n6\n7");
     await page.getByLabel("Votre présentation et votre parcours").fill("Ne doit pas passer.");
     await expect(page.getByText("45 / 40 caractères")).toBeVisible();
     await page.getByRole("button", { name: "Enregistrer les textes" }).click();
