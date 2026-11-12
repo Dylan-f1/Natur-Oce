@@ -18,10 +18,27 @@ test.describe("Tarifs de l'accueil", () => {
         ('t-bilan', 'Bilan', 90, 7500, 1);
     `);
     await page.goto("/");
-    const lignes = page.locator(".tarifs > span");
+    const lignes = page.locator(".tarifs > li");
     await expect(lignes).toHaveCount(2);
-    await expect(lignes.nth(0)).toHaveText(new RegExp(`^Bilan \\(1 h 30\\) 75${esp}€$`));
-    await expect(lignes.nth(1)).toHaveText(new RegExp(`^Suivi \\(45 min\\) 62,50${esp}€$`));
+    await expect(lignes.nth(0)).toHaveText(new RegExp(`^Bilan 1 h 30 75${esp}€$`));
+    await expect(lignes.nth(1)).toHaveText(new RegExp(`^Suivi 45 min 62,50${esp}€$`));
+  });
+
+  test("chaque séance a son étiquette ; sans durée, l'étiquette n'a que le nom et le prix ; un nom long ne déborde pas à 375 px", async ({ page }) => {
+    sqlLocal(`
+      DELETE FROM tarif;
+      INSERT INTO tarif (id, libelle, duree_minutes, prix_centimes, ordre) VALUES
+        ('t-long', 'Bilan de vitalité complet avec questionnaire préalable', 120, 9500, 0),
+        ('t-forfait', 'Forfait 3 suivis', NULL, 13500, 1);
+    `);
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto("/");
+    const etiquettes = page.getByRole("list", { name: "Tarifs des séances" }).getByRole("listitem");
+    await expect(etiquettes).toHaveCount(2);
+    await expect(etiquettes.nth(0).locator(".tarif-duree")).toHaveText("2 h");
+    await expect(etiquettes.nth(1).locator(".tarif-duree")).toHaveCount(0);
+    await expect(etiquettes.nth(1).locator(".tarif-prix")).toHaveText(new RegExp(`^135${esp}€$`));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
   });
 
   test("Given aucun tarif, Then « Tarifs sur demande » s'affiche", async ({ page }) => {
