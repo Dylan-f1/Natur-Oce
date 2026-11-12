@@ -3,7 +3,8 @@ import { ContenuAccueil } from "@/app/_composants/ContenuAccueil";
 import { EnTete } from "@/app/_composants/EnTete";
 import { PiedDePage } from "@/app/_composants/PiedDePage";
 import { listerArticlesPublies } from "@/lib/db/articles";
-import type { Tarif } from "@/lib/db/schema";
+import type { Section, Tarif } from "@/lib/db/schema";
+import { lireSections } from "@/lib/db/sections";
 import { lireTarifs } from "@/lib/db/tarifs";
 import { lireTextes } from "@/lib/db/textes";
 import { exigerSession } from "@/lib/session";
@@ -20,12 +21,13 @@ export default async function MonAccueil() {
 
   let textes: Textes | null = null;
   let tarifs: Tarif[] | null = null;
+  let sections: Section[] | null = null;
   try {
-    [textes, tarifs] = await Promise.all([lireTextes(), lireTarifs()]);
+    [textes, tarifs, sections] = await Promise.all([lireTextes(), lireTarifs(), lireSections()]);
   } catch (erreur) {
     console.error("[mon accueil] lecture impossible", erreur);
   }
-  if (!textes || !tarifs) {
+  if (!textes || !tarifs || !sections) {
     return (
       <main className="admin-cadre admin-contenu">
         <p role="alert" className="message-erreur">
@@ -39,6 +41,7 @@ export default async function MonAccueil() {
   return (
     <EditeurAccueil
       textes={textes}
+      sections={sections.map((s) => ({ id: s.id, modele: s.modele, titre: s.titre, texte: s.texte, liste: s.liste, bouton: s.bouton }))}
       tarifs={tarifs.map((t) => ({
         id: t.id,
         libelle: t.libelle,
@@ -48,7 +51,7 @@ export default async function MonAccueil() {
     >
       <EnTete />
       <main>
-        <ContenuAccueil textes={textes} tarifs={tarifs} articles={articles} edition />
+        <ContenuAccueil textes={textes} tarifs={tarifs} articles={articles} sections={sections} edition />
       </main>
       <PiedDePage />
     </EditeurAccueil>

@@ -22,3 +22,43 @@ export function Crayon({ zone }: { zone: Zone }) {
     </button>
   );
 }
+
+// ---------------------------------------------------------------------------------------------
+// Sections ajoutées (EF-21) : outils de chaque section et bouton « Ajouter une section ici ».
+
+export type ActionsSections = {
+  modifier: (id: string, depuis: HTMLElement) => void;
+  deplacer: (id: string, sens: -1 | 1) => void;
+  supprimer: (id: string, titre: string) => void;
+  ajouter: (apres: string, depuis: HTMLElement) => void;
+};
+
+export const ActionsSection = createContext<ActionsSections | null>(null);
+
+export function OutilsSection({ id, titre, premiere, derniere }: { id: string; titre: string; premiere: boolean; derniere: boolean }) {
+  const actions = useContext(ActionsSection);
+  if (!actions) return null;
+  return (
+    <div className="outils-section" data-edition="">
+      <button type="button" className="crayon" onClick={(ev) => actions.modifier(id, ev.currentTarget)} aria-label={`Modifier « ${titre} »`}>
+        <span>Modifier</span>
+      </button>
+      <button type="button" className="outil" onClick={() => actions.deplacer(id, -1)} disabled={premiere} aria-label={`Monter « ${titre} »`}>Monter</button>
+      <button type="button" className="outil" onClick={() => actions.deplacer(id, 1)} disabled={derniere} aria-label={`Descendre « ${titre} »`}>Descendre</button>
+      <button type="button" className="outil outil-danger" onClick={() => actions.supprimer(id, titre)} aria-label={`Supprimer « ${titre} »`}>Supprimer</button>
+    </div>
+  );
+}
+
+export function AjouterIci({ apres, libelle }: { apres: string; libelle: string }) {
+  const actions = useContext(ActionsSection);
+  if (!actions) return null;
+  return (
+    <div className="cadre ajouter-ici" data-edition="">
+      <button type="button" className="ajouter-section" onClick={(ev) => actions.ajouter(apres, ev.currentTarget)}
+        aria-label={`Ajouter une section après « ${libelle} »`}>
+        + Ajouter une section ici
+      </button>
+    </div>
+  );
+}

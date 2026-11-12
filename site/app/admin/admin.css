@@ -216,3 +216,26 @@ a.liste-titre:focus-visible { outline: 2px solid var(--olive); outline-offset: 3
   @keyframes panneau-entre { from { transform: translateX(100%); } }
 }
 
+
+/* Sections ajoutées (EF-21) : outils, « Ajouter une section ici », choix du modèle. */
+.outils-section { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1.25rem; }
+.outils-section .crayon { margin: 0; }
+.outil { min-height: 44px; padding: .45rem .8rem; font: 400 .95rem/1 var(--texte); color: var(--olive-fonce); background: transparent;
+  border: 1px solid #B9AD92; border-radius: 999px; cursor: pointer; touch-action: manipulation; }
+.outil:disabled { opacity: .45; cursor: default; }
+.outil-danger { color: #8A2F14; border-color: #D2A894; }
+.ajouter-ici { padding-block: 1.25rem; }
+.ajouter-section { width: 100%; min-height: 52px; padding: .8rem 1rem; font: 500 1rem/1.2 var(--texte); color: var(--olive-fonce);
+  background: transparent; border: 1.5px dashed #B9AD92; border-radius: 6px; cursor: pointer; touch-action: manipulation; }
+@media (hover: hover) and (pointer: fine) {
+  .outil:not(:disabled):hover, .ajouter-section:hover { background: #F6EEDC; }
+}
+.choix-modele { display: grid; gap: .75rem; }
+.choix-modele p { margin: 0; font-weight: 500; }
+.carte-modele { display: grid; gap: .25rem; text-align: left; padding: 1rem 1.1rem; font: inherit; color: var(--encre); background: var(--etiquette);
+  border: 1px solid #CFC3A8; border-radius: 4px; cursor: pointer; }
+.carte-modele strong { font: 400 1.2rem/1.2 var(--titre); color: var(--olive-fonce); }
+.carte-modele:focus-visible { outline: 2px solid var(--olive); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .carte-modele:hover { border-color: var(--olive); } }
+.case { display: flex; align-items: center; gap: .6rem; min-height: 44px; }
+.case input { width: 1.2rem; height: 1.2rem; accent-color: var(--olive-fonce); }

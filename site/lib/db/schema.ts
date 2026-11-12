@@ -15,6 +15,27 @@ export const tarif = sqliteTable("tarif", {
 export type Tarif = typeof tarif.$inferSelect;
 
 /**
+ * Sections ajoutées par Océane à l'accueil (specs/SPEC-edition-visuelle.md, EF-21, D-24).
+ * `apres` = clé de la section d'origine qu'elle suit ; `ordre` = rang parmi celles qui la suivent.
+ * Texte brut seulement (limites dans lib/sections.ts).
+ */
+export const section = sqliteTable("section", {
+  id: text("id").primaryKey(),
+  modele: text("modele", { enum: ["texte", "texte_liste", "texte_photo"] }).notNull(),
+  titre: text("titre").notNull(),
+  texte: text("texte").notNull().default(""),
+  liste: text("liste").notNull().default(""),
+  bouton: integer("bouton", { mode: "boolean" }).notNull().default(false),
+  imageCle: text("image_cle"),
+  imageAlt: text("image_alt"),
+  apres: text("apres").notNull(),
+  ordre: integer("ordre").notNull().default(0),
+  modifieLe: integer("modifie_le").notNull(),
+});
+
+export type Section = typeof section.$inferSelect;
+
+/**
  * Textes de l'accueil modifiables par Océane (specs/SPEC-textes.md, EF-19, D-23). `cle` parmi
  * celles de lib/textes.ts ; une clé absente prend sa valeur de départ. Texte brut, jamais du HTML.
  */

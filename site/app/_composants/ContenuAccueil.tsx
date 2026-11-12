@@ -1,24 +1,46 @@
 import Image from "next/image";
-import type { Tarif } from "@/lib/db/schema";
+import type { Section, Tarif } from "@/lib/db/schema";
 import type { ArticlePublic } from "@/lib/db/articles";
 import { formaterDuree, formaterPrix } from "@/lib/tarifs";
+import { ancres, type Emplacement } from "@/lib/sections";
 import { lignes, paragraphes, sansPointFinal, type Textes } from "@/lib/textes";
-import { Crayon } from "./Crayon";
+import { AjouterIci, Crayon } from "./Crayon";
 import { FormulaireContact } from "./FormulaireContact";
 import { PlancheArticle } from "./PlancheArticle";
+import { SectionAjoutee } from "./SectionAjoutee";
 
 // Contenu de l'accueil — porté depuis design/accueil.html (maquette validée le 10/11/2026).
 // Le même composant sert l'accueil public (app/page.tsx) et « Mon accueil » dans
 // l'administration (EF-20, specs/SPEC-edition-visuelle.md), où `edition` ajoute les crayons.
 // Les textes viennent de D1 (EF-19, lib/textes.ts) : vides, ils ne s'affichent pas.
 
-type Props = { textes: Textes; tarifs: Tarif[]; articles: ArticlePublic[]; edition?: boolean };
+type Props = { textes: Textes; tarifs: Tarif[]; articles: ArticlePublic[]; sections?: Section[]; edition?: boolean };
 
-export function ContenuAccueil({ textes, tarifs, articles, edition = false }: Props) {
+const LIBELLES: Record<Emplacement, string> = {
+  stress: "Ma spécialité : la gestion du stress",
+  approche: "Mon approche",
+  seances: "Une séance, étape par étape",
+  conseils: "Conseils",
+};
+
+export function ContenuAccueil({ textes, tarifs, articles, sections = [], edition = false }: Props) {
   const themes = lignes(textes.themes);
   const themesStress = lignes(textes.themes_stress);
   const outil = sansPointFinal(textes.outil_visio);
   const duree = sansPointFinal(textes.duree_bilan);
+  // Sections ajoutées par Océane (EF-21), déjà dans l'ordre de la page (lib/db/sections.ts).
+  const ancresSections = ancres(sections.map((s) => s.titre));
+  const apres = (emplacement: Emplacement) => (
+    <>
+      {sections.map((s, i) =>
+        s.apres === emplacement ? (
+          <SectionAjoutee key={s.id} section={s} ancre={ancresSections[i]} edition={edition}
+            premiere={i === 0 && emplacement === "stress"} derniere={i === sections.length - 1 && emplacement === "conseils"} />
+        ) : null,
+      )}
+      {edition && <AjouterIci apres={emplacement} libelle={LIBELLES[emplacement]} />}
+    </>
+  );
 
   return (
     <>
@@ -96,6 +118,7 @@ export function ContenuAccueil({ textes, tarifs, articles, edition = false }: Pr
         )}
       </div>
     </section>
+    {apres("stress")}
 
     <section id="approche" className="section" aria-labelledby="titre-approche">
       <div className="cadre grille">
@@ -109,6 +132,7 @@ export function ContenuAccueil({ textes, tarifs, articles, edition = false }: Pr
         </div>
       </div>
     </section>
+    {apres("approche")}
 
     <section id="seances" className="section" aria-labelledby="titre-seances">
       <div className="cadre grille">
@@ -159,6 +183,7 @@ export function ContenuAccueil({ textes, tarifs, articles, edition = false }: Pr
         </div>
       </div>
     </section>
+    {apres("seances")}
 
     <section id="conseils" className="section conseils" aria-labelledby="titre-conseils">
       <div className="cadre">
@@ -174,6 +199,7 @@ export function ContenuAccueil({ textes, tarifs, articles, edition = false }: Pr
         <p className="sans-article">Les premiers conseils arrivent bientôt.</p>
       </div>
     </section>
+    {apres("conseils")}
 
     <section id="contact" className="contact" aria-labelledby="titre-contact">
       <div className="cadre grille">
