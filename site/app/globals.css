@@ -162,6 +162,11 @@
   .lien-instagram:active svg { transform: scale(.92); }
   @media (hover: hover) and (pointer: fine) { .lien-instagram:hover { color: var(--or-texte); } }
 
+  /* Sections ajoutées par Océane (EF-21) : la grille de « Mon approche », une liste à filets. */
+  .liste-ajoutee { list-style: none; margin: 0 0 2rem; padding: 0; max-width: 40rem; }
+  .liste-ajoutee li { padding: 1rem 0; border-bottom: 1px solid var(--filet); font: 400 clamp(1.2rem, 1.6vw, 1.45rem)/1.3 var(--titre); color: var(--olive-fonce); }
+  .liste-ajoutee li:first-child { border-top: 1px solid var(--filet); }
+
   /* Fenêtre centrée (option A du 12/11) : confidentialité, puis articles (T16). */
   html.fenetre-ouverte { overflow: hidden; }
   .fenetre { width: min(46rem, calc(100vw - 2rem)); max-width: none; height: min(88svh, 60rem); max-height: none; padding: 0; border: 0; border-radius: 4px;
