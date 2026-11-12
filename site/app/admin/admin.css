@@ -179,3 +179,40 @@ a.liste-titre:focus-visible { outline: 2px solid var(--olive); outline-offset: 3
 /* Un champ garde sa largeur naturelle dans une grille : on le borne à sa colonne. */
 .champs-tarif .champ { min-width: 0; }
 .champs-tarif input { width: 100%; min-width: 0; box-sizing: border-box; }
+
+/* « Mon accueil » (EF-20) : l'accueil réel, un bandeau d'administration, des crayons, un panneau. */
+.apercu { min-height: 100svh; background: var(--papier); }
+.apercu-bandeau { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .25rem 1.5rem;
+  padding: .5rem max(var(--ligne), env(safe-area-inset-left, 0px)); background: var(--olive-fonce); color: var(--papier); font-size: 1rem; }
+.apercu-bandeau p { margin: 0; }
+.apercu-bandeau strong { font-weight: 500; }
+.apercu-bandeau nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 1.25rem; }
+.apercu-bandeau nav a { color: var(--papier); text-decoration: none; display: inline-block; padding-block: .6rem; }
+.apercu-bandeau :focus-visible { outline: 2px solid var(--or-clair); outline-offset: 3px; }
+.apercu-message { position: sticky; top: 3.25rem; z-index: 19; margin: 0; padding: .8rem max(var(--ligne), env(safe-area-inset-left, 0px));
+  background: var(--etiquette); border-bottom: 1px solid var(--filet); }
+.apercu-site a, .apercu-site button:not(.crayon) { cursor: default; }
+
+.crayon { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .45rem .9rem; margin: 0 0 1.25rem;
+  font: 500 .95rem/1 var(--texte); color: var(--olive-fonce); background: var(--etiquette); border: 1px solid #B9AD92; border-radius: 999px;
+  cursor: pointer; box-shadow: 0 2px 6px -3px rgba(52,58,32,.4); touch-action: manipulation; -webkit-user-select: none; user-select: none;
+  transition: background-color .15s ease-out, transform .12s ease-out; }
+.crayon:active { transform: scale(.97); }
+.crayon:focus-visible { outline: 2px solid var(--or); outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) { .crayon:hover { background: #F6EEDC; } }
+
+.panneau-edition { margin: 0 0 0 auto; width: min(34rem, 100vw); height: 100dvh; max-height: 100dvh; max-width: none; padding: 0; border: 0;
+  border-left: 1px solid var(--filet); background: var(--papier); color: var(--encre); overflow-y: auto; overscroll-behavior: contain; }
+.panneau-edition::backdrop { background: rgba(52, 58, 32, .35); }
+.panneau-contenu { padding: 0 clamp(1.25rem, 4vw, 2rem) calc(2rem + env(safe-area-inset-bottom)); display: grid; gap: 1.25rem; }
+.panneau-entete { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 1rem 0 .75rem; background: var(--papier); border-bottom: 1px solid var(--filet); }
+.panneau-entete h2 { font: 400 1.5rem/1.2 var(--titre); color: var(--olive-fonce); margin: 0; }
+.panneau-fermer { color: var(--olive-fonce); }
+.panneau-edition .formulaire { max-width: none; }
+.panneau-edition .champ textarea, .panneau-edition .champ input { width: 100%; min-width: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .panneau-edition[open] { animation: panneau-entre .3s cubic-bezier(.32, .72, 0, 1); }
+  @keyframes panneau-entre { from { transform: translateX(100%); } }
+}
+
