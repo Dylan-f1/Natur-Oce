@@ -2,16 +2,25 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { TARIFS_MAX, type LigneSaisie } from "@/lib/tarifs";
-import { enregistrerTarifs, type EtatTarifs } from "./actions";
+import type { IssuePublication } from "@/lib/publication/serveur";
+import { enregistrerTarifs, enregistrerTarifsAccueil, type EtatTarifs } from "./actions";
 
-type Props = { initial: LigneSaisie[] };
+/** `apresEnregistrement` : dans « Mon accueil » (EF-20), enregistre sans changer de page. */
+type Props = { initial: LigneSaisie[]; apresEnregistrement?: (site: IssuePublication) => void };
 
 // Liste des tarifs (EF-12) : champs contrôlés, la saisie reste en place en cas d'erreur ; l'ordre
 // affiché ici est celui de l'accueil. Le serveur revalide tout (lib/tarifs.ts).
-export function FormulaireTarifs({ initial }: Props) {
-  const [etat, envoyer, enCours] = useActionState<EtatTarifs, FormData>(enregistrerTarifs, {});
+export function FormulaireTarifs({ initial, apresEnregistrement }: Props) {
+  const [etat, envoyer, enCours] = useActionState<EtatTarifs, FormData>(
+    apresEnregistrement ? enregistrerTarifsAccueil : enregistrerTarifs,
+    {},
+  );
   const [lignes, setLignes] = useState<LigneSaisie[]>(initial);
   const focusApres = useRef<string | null>(null); // id d'élément à reprendre au clavier après un rendu
+
+  useEffect(() => {
+    if (etat.site) apresEnregistrement?.(etat.site);
+  }, [etat, apresEnregistrement]);
 
   useEffect(() => {
     if (focusApres.current) {

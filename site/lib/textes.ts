@@ -198,3 +198,16 @@ export function textesDepuisBase(rangees: readonly { cle: string; valeur: string
   }
   return textes;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Zones de « Mon accueil » (EF-20, specs/SPEC-edition-visuelle.md) : ce qu'ouvre chaque crayon.
+
+export type Zone = "sport" | "stress" | "approche" | "seances" | "tarifs";
+
+export const ZONES: Record<Zone, { titre: string; cles: readonly CleTexte[] }> = {
+  sport: { titre: "Ma spécialité : les sportifs", cles: ["specialite", "themes"] },
+  stress: { titre: "Ma spécialité : la gestion du stress", cles: ["stress", "themes_stress"] },
+  approche: { titre: "Mon approche", cles: ["approche", "formation"] },
+  seances: { titre: "Une séance, étape par étape", cles: ["outil_visio", "duree_bilan"] },
+  tarifs: { titre: "Les tarifs", cles: [] },
+};

@@ -8,7 +8,7 @@ type Props = { initial: Textes };
 
 const longueur = (texte: string) => [...texte].length;
 
-/** Compteur affiché sous le champ : caractères, ou nombre de lignes pour la liste des thèmes. */
+/** Compteur affiché sous le champ : caractères, ou nombre de lignes pour une liste de thèmes. */
 function compteur(cle: CleTexte, valeur: string): { texte: string; trop: boolean } {
   const champ = CHAMPS_TEXTES[cle];
   if (champ.forme === "lignes") {
@@ -17,6 +17,34 @@ function compteur(cle: CleTexte, valeur: string): { texte: string; trop: boolean
   }
   const n = longueur(valeur.trim());
   return { texte: `${n} / ${champ.max} caractères`, trop: n > champ.max };
+}
+
+/** Un champ de texte de l'accueil, avec son aide, son compteur et son erreur (page Textes et « Mon accueil »). */
+export function ChampTexte({ cle, valeur, erreur, onChange }: { cle: CleTexte; valeur: string; erreur?: string; onChange: (v: string) => void }) {
+  const champ = CHAMPS_TEXTES[cle];
+  const c = compteur(cle, valeur);
+  const id = `texte-${cle}`; // préfixe : « approche », « stress »… sont aussi des sections de l'accueil
+  const commun = {
+    id,
+    name: cle,
+    value: valeur,
+    onChange: (ev: { target: { value: string } }) => onChange(ev.target.value),
+    "aria-invalid": !!erreur,
+    "aria-describedby": [`${id}-aide`, `${id}-compteur`, erreur ? `${id}-erreur` : ""].filter(Boolean).join(" "),
+  };
+  return (
+    <div className="champ">
+      <label htmlFor={id}>{champ.libelle}</label>
+      {champ.forme === "ligne" ? (
+        <input {...commun} autoComplete="off" />
+      ) : (
+        <textarea {...commun} rows={champ.forme === "lignes" ? 6 : cle === "approche" ? 10 : 6} />
+      )}
+      <p id={`${id}-aide`} className="aide">{champ.aide} Laissez vide pour ne rien afficher.</p>
+      <p id={`${id}-compteur`} className={c.trop ? "compteur compteur-trop" : "compteur"}>{c.texte}</p>
+      {erreur && <p id={`${id}-erreur`} className="erreur">{erreur}</p>}
+    </div>
+  );
 }
 
 // Textes de l'accueil (EF-19) : la saisie reste en place en cas d'erreur, le serveur revalide tout
@@ -42,32 +70,10 @@ export function FormulaireTextes({ initial }: Props) {
       {sections.map((section) => (
         <fieldset key={section} className="section-textes">
           <legend>{section}</legend>
-          {CLES_TEXTES.filter((c) => CHAMPS_TEXTES[c].section === section).map((cle) => {
-            const champ = CHAMPS_TEXTES[cle];
-            const c = compteur(cle, textes[cle]);
-            const decrit = [`${cle}-aide`, `${cle}-compteur`, erreurs[cle] ? `${cle}-erreur` : ""].filter(Boolean).join(" ");
-            const commun = {
-              id: cle,
-              name: cle,
-              value: textes[cle],
-              onChange: (ev: { target: { value: string } }) => setTextes((t) => ({ ...t, [cle]: ev.target.value })),
-              "aria-invalid": !!erreurs[cle],
-              "aria-describedby": decrit,
-            };
-            return (
-              <div className="champ" key={cle}>
-                <label htmlFor={cle}>{champ.libelle}</label>
-                {champ.forme === "ligne" ? (
-                  <input {...commun} autoComplete="off" />
-                ) : (
-                  <textarea {...commun} rows={champ.forme === "lignes" ? 6 : cle === "approche" ? 10 : 6} />
-                )}
-                <p id={`${cle}-aide`} className="aide">{champ.aide} Laissez vide pour ne rien afficher.</p>
-                <p id={`${cle}-compteur`} className={c.trop ? "compteur compteur-trop" : "compteur"}>{c.texte}</p>
-                {erreurs[cle] && <p id={`${cle}-erreur`} className="erreur">{erreurs[cle]}</p>}
-              </div>
-            );
-          })}
+          {CLES_TEXTES.filter((c) => CHAMPS_TEXTES[c].section === section).map((cle) => (
+            <ChampTexte key={cle} cle={cle} valeur={textes[cle]} erreur={erreurs[cle]}
+              onChange={(v) => setTextes((t) => ({ ...t, [cle]: v }))} />
+          ))}
         </fieldset>
       ))}
 

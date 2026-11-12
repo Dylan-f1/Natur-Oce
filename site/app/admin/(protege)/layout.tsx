@@ -21,6 +21,7 @@ export default async function MiseEnPageAdmin({ children }: LayoutProps<"/admin"
           <Link href="/admin" className="admin-marque">Administration de Natur’Océ</Link>
           <nav aria-label="Administration">
             <ul>
+              <li><Link href="/admin/accueil">Mon accueil</Link></li>
               <li><Link href="/admin">Articles</Link></li>
               <li><Link href="/admin/tarifs">Tarifs</Link></li>
               <li><Link href="/admin/textes">Textes</Link></li>

@@ -1,0 +1,10 @@
+/* Texte de la politique de confidentialité : page /confidentialite et fenêtre du pied de page. */
+.texte-confidentialite h2, .texte-confidentialite h3 { font: 400 clamp(1.4rem, 2.4vw, 1.9rem)/1.2 var(--titre); color: var(--olive-fonce); margin: 2.25rem 0 .6rem; }
+.texte-confidentialite > :first-child { margin-top: 0; }
+.texte-confidentialite p, .texte-confidentialite li { max-width: 62ch; }
+.texte-confidentialite p { margin: 0 0 1rem; }
+.texte-confidentialite ul { margin: 0 0 1rem; padding-left: 1.2rem; }
+.texte-confidentialite li { margin-bottom: .4rem; }
+.texte-confidentialite strong { font-weight: 500; }
+.texte-confidentialite a { color: var(--or-texte); text-underline-offset: 4px; overflow-wrap: anywhere; }
+.texte-confidentialite .mise-a-jour { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--filet); font-style: italic; font-size: 1rem; }
