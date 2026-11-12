@@ -42,3 +42,11 @@
 @media (max-width: 760px) {
   .champs-contact { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Replié jusqu'au clic sur « Demander une séance » (avec JavaScript seulement, voir le noscript). */
+.formulaire-contact.replie { display: none; }
+.ouvrir-contact { border: 0; cursor: pointer; }
+.formulaire-contact.vient-d-ouvrir { animation: ouvrir-contact 220ms cubic-bezier(.23, 1, .32, 1); }
+@keyframes ouvrir-contact { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .formulaire-contact.vient-d-ouvrir { animation: none; } }
+

@@ -133,8 +133,34 @@ test.describe("Demande de séance", () => {
     expect(libelles.join(" ")).not.toMatch(/santé|symptôme|traitement|maladie/i);
   });
 
+  test("replié au départ : « Demander une séance » l'ouvre et place le curseur dans le prénom", async ({ page }) => {
+    await page.goto("/");
+    const formulaire = page.locator("#formulaire-contact");
+    const bouton = page.locator("#contact").getByRole("button", { name: "Demander une séance" });
+    await expect(formulaire).toBeHidden();
+    await expect(bouton).toHaveAttribute("aria-expanded", "false");
+    await bouton.click();
+    await expect(formulaire).toBeVisible();
+    await expect(bouton).toHaveCount(0);
+    await expect(page.locator("#contact-prenom")).toBeFocused();
+  });
+
+  test("les autres « Demander une séance » de la page ouvrent aussi le formulaire, sans placer le curseur", async ({ page }) => {
+    await page.goto("/");
+    await page.locator("header").getByRole("link", { name: "Demander une séance" }).click();
+    await expect(page).toHaveURL(/#contact$/);
+    await expect(page.locator("#formulaire-contact")).toBeVisible();
+    await expect(page.locator("#contact-prenom")).not.toBeFocused(); // pas de clavier qui surgit sur téléphone
+  });
+
   test.describe("sans JavaScript", () => {
     test.use({ javaScriptEnabled: false });
+
+    test("le formulaire est ouvert d'emblée, sans bouton qui ne ferait rien", async ({ page }) => {
+      await page.goto("/");
+      await expect(page.locator("#formulaire-contact")).toBeVisible();
+      await expect(page.locator(".ouvrir-contact")).toBeHidden();
+    });
 
     test("le navigateur bloque un envoi incomplet ; complet, il mène à la page de confirmation", async ({ page }) => {
       await page.goto("/");
