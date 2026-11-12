@@ -6,7 +6,7 @@ import { ancres, deplacer, estEmplacement, estModele, trier, validerSection } fr
 describe("validerSection", () => {
   it("texte simple : titre et texte obligatoires, normalisés", () => {
     const v = validerSection("texte", { titre: "  Mes  conseils ", texte: "Un.\n\n\n\nDeux." });
-    expect(v).toEqual({ ok: true, section: { modele: "texte", titre: "Mes conseils", texte: "Un.\n\nDeux.", liste: "", bouton: false } });
+    expect(v).toEqual({ ok: true, section: { modele: "texte", titre: "Mes conseils", texte: "Un.\n\nDeux.", liste: "", bouton: false, imageCle: null, imageAlt: null } });
     const vide = validerSection("texte", { titre: "", texte: "" });
     expect(vide.ok).toBe(false);
     if (!vide.ok) expect(Object.keys(vide.erreurs).sort()).toEqual(["texte", "titre"]);
@@ -14,7 +14,7 @@ describe("validerSection", () => {
 
   it("texte + liste : au moins un thème, 6 au plus, bouton facultatif ; texte facultatif", () => {
     const v = validerSection("texte_liste", { titre: "Ateliers", texte: "", liste: "- Sommeil\n\nRespiration", bouton: true });
-    expect(v).toEqual({ ok: true, section: { modele: "texte_liste", titre: "Ateliers", texte: "", liste: "Sommeil\nRespiration", bouton: true } });
+    expect(v).toEqual({ ok: true, section: { modele: "texte_liste", titre: "Ateliers", texte: "", liste: "Sommeil\nRespiration", bouton: true, imageCle: null, imageAlt: null } });
     const sans = validerSection("texte_liste", { titre: "Ateliers", liste: "" });
     expect(sans.ok).toBe(false);
     if (!sans.ok) expect(sans.erreurs.liste).toBe("Ajoutez au moins un thème, un par ligne.");
@@ -41,10 +41,27 @@ describe("validerSection", () => {
   });
 });
 
+describe("texte + photo (T19)", () => {
+  const cle = "0f8fad5b-d9cb-469f-a165-70867728950e.webp";
+  it("photo et description obligatoires ; clé fabriquée par le site seulement", () => {
+    const v = validerSection("texte_photo", { titre: "Atelier", texte: "Texte.", imageCle: cle, imageAlt: "  Une tisane fumante " });
+    expect(v).toEqual({ ok: true, section: { modele: "texte_photo", titre: "Atelier", texte: "Texte.", liste: "", bouton: false, imageCle: cle, imageAlt: "Une tisane fumante" } });
+    const sans = validerSection("texte_photo", { titre: "Atelier", texte: "Texte.", imageCle: "../secret.png", imageAlt: "" });
+    expect(sans.ok).toBe(false);
+    if (!sans.ok) expect(Object.keys(sans.erreurs).sort()).toEqual(["image", "imageAlt"]);
+  });
+
+  it("les autres modèles ignorent la photo", () => {
+    const v = validerSection("texte", { titre: "a", texte: "b", imageCle: cle, imageAlt: "x" });
+    expect(v.ok && [v.section.imageCle, v.section.imageAlt]).toEqual([null, null]);
+  });
+});
+
 describe("garde-fous", () => {
   it("modèles et emplacements connus seulement", () => {
     expect(estModele("texte")).toBe(true);
-    expect(estModele("texte_photo")).toBe(false); // T19
+    expect(estModele("texte_photo")).toBe(true);
+    expect(estModele("galerie")).toBe(false);
     expect(estEmplacement("approche")).toBe(true);
     expect(estEmplacement("contact")).toBe(false);
   });

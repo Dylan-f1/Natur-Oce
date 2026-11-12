@@ -27,7 +27,7 @@ export async function creerSection(id: string, s: SectionValide, apres: string, 
 export async function modifierSection(id: string, s: SectionValide, maintenant = Date.now()): Promise<boolean> {
   const lignes = await (await db())
     .update(section)
-    .set({ titre: s.titre, texte: s.texte, liste: s.liste, bouton: s.bouton, modifieLe: maintenant })
+    .set({ titre: s.titre, texte: s.texte, liste: s.liste, bouton: s.bouton, imageCle: s.imageCle, imageAlt: s.imageAlt, modifieLe: maintenant })
     .where(eq(section.id, id))
     .returning({ id: section.id });
   return lignes.length > 0;

@@ -166,6 +166,7 @@
   .liste-ajoutee { list-style: none; margin: 0 0 2rem; padding: 0; max-width: 40rem; }
   .liste-ajoutee li { padding: 1rem 0; border-bottom: 1px solid var(--filet); font: 400 clamp(1.2rem, 1.6vw, 1.45rem)/1.3 var(--titre); color: var(--olive-fonce); }
   .liste-ajoutee li:first-child { border-top: 1px solid var(--filet); }
+  .photo-ajoutee { display: block; width: 100%; max-width: 28rem; aspect-ratio: 4 / 3; object-fit: cover; margin-top: 1rem; background: var(--feuille); }
 
   /* Fenêtre centrée (option A du 12/11) : confidentialité, puis articles (T16). */
   html.fenetre-ouverte { overflow: hidden; }

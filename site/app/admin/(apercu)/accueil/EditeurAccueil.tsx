@@ -4,25 +4,27 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, type ReactNode, type SyntheticEvent } from "react";
 import { ActionsSection, OuvrirZone, type ActionsSections } from "@/app/_composants/Crayon";
 import type { IssuePublication } from "@/lib/publication/serveur";
-import { LIMITES_SECTION, MODELES, estModele, type ErreursSection, type ModeleT18, type SaisieSection } from "@/lib/sections";
+import { LIMITES_SECTION, MODELES, estModele, type ErreursSection, type ModeleSection, type SaisieSection } from "@/lib/sections";
 import type { LigneSaisie } from "@/lib/tarifs";
 import { ZONES, type CleTexte, type ErreursTextes, type Textes, type Zone } from "@/lib/textes";
 import { MESSAGES_SITE } from "../../(protege)/MessageSite";
 import { FormulaireTarifs } from "../../(protege)/tarifs/FormulaireTarifs";
 import { enregistrerZoneTextes } from "../../(protege)/textes/actions";
 import { ChampTexte } from "../../(protege)/textes/FormulaireTextes";
+import { ErreurImage, envoyerImage } from "../../(protege)/articles/envoyerImage";
 import { ajouterSection, deplacerSection, enregistrerSection, retirerSection, type RetourSection } from "./actions";
 
-type SectionEditee = { id: string; modele: string; titre: string; texte: string; liste: string; bouton: boolean };
+type SectionEditee = { id: string; modele: string; titre: string; texte: string; liste: string; bouton: boolean; imageCle: string | null; imageAlt: string | null };
 type Props = { textes: Textes; tarifs: LigneSaisie[]; sections: SectionEditee[]; children: ReactNode };
 
 /** Ce que montre le panneau : une zone d'origine, une section ajoutée, ou une nouvelle section. */
 type Cible =
   | { type: "zone"; zone: Zone }
-  | { type: "section"; id: string; modele: ModeleT18; titre: string }
-  | { type: "nouvelle"; apres: string; modele: ModeleT18 | null };
+  | { type: "section"; id: string; modele: ModeleSection; titre: string }
+  | { type: "nouvelle"; apres: string; modele: ModeleSection | null };
 
-const SECTION_VIDE: SaisieSection = { titre: "", texte: "", liste: "", bouton: true };
+const SECTION_VIDE: SaisieSection = { titre: "", texte: "", liste: "", bouton: true, imageCle: null, imageAlt: null };
+const FORMATS = "image/jpeg,image/png,image/webp,image/heic,image/heif";
 const ECHEC = "L’enregistrement a échoué. Réessayez dans un instant : votre saisie est conservée.";
 
 // Éditeur de « Mon accueil » (EF-20, EF-21) : les crayons ouvrent un panneau à droite (plein écran
@@ -33,6 +35,7 @@ export function EditeurAccueil({ textes, tarifs, sections, children }: Props) {
   const panneau = useRef<HTMLDialogElement>(null);
   const origine = useRef<HTMLElement | null>(null);
   const modifie = useRef(false);
+  const champPhoto = useRef<HTMLInputElement>(null);
   const [cible, setCible] = useState<Cible | null>(null);
   const [ouverture, setOuverture] = useState(0); // remet le formulaire des tarifs à neuf à chaque ouverture
   const [saisie, setSaisie] = useState<Partial<Textes>>({});
@@ -64,7 +67,7 @@ export function EditeurAccueil({ textes, tarifs, sections, children }: Props) {
     modifier(id, depuis) {
       const s = sections.find((x) => x.id === id);
       if (!s || !estModele(s.modele)) return;
-      setSaisieSection({ titre: s.titre, texte: s.texte, liste: s.liste, bouton: s.bouton });
+      setSaisieSection({ titre: s.titre, texte: s.texte, liste: s.liste, bouton: s.bouton, imageCle: s.imageCle, imageAlt: s.imageAlt });
       ouvrirPanneau({ type: "section", id, modele: s.modele, titre: s.titre }, depuis);
     },
     ajouter(apres, depuis) {
@@ -115,10 +118,24 @@ export function EditeurAccueil({ textes, tarifs, sections, children }: Props) {
         setErreurs(retour.erreurs ?? {});
         setGeneral(retour.general ?? ECHEC);
       } else {
+        // Photo choisie : réduite et envoyée d'abord ; la section garde sa clé.
+        let envoi = saisieSection;
+        const fichier = champPhoto.current?.files?.[0];
+        if (fichier) {
+          try {
+            const image = await envoyerImage(fichier);
+            envoi = { ...saisieSection, imageCle: image.cle };
+            setSaisieSection(envoi);
+            if (champPhoto.current) champPhoto.current.value = "";
+          } catch (e) {
+            setErreursSection({ image: e instanceof ErreurImage ? e.message : "La photo n’a pas pu être envoyée. Vérifiez votre connexion et réessayez." });
+            return;
+          }
+        }
         const retour = cible.type === "section"
-          ? await enregistrerSection(cible.id, saisieSection)
-          : await ajouterSection(cible.apres, cible.modele!, saisieSection);
-        if (retour.ok) return enregistre(retour.site, cible.type === "section" ? `« ${saisieSection.titre.trim()} » est enregistrée.` : "La section est ajoutée.");
+          ? await enregistrerSection(cible.id, envoi)
+          : await ajouterSection(cible.apres, cible.modele!, envoi);
+        if (retour.ok) return enregistre(retour.site, cible.type === "section" ? `« ${envoi.titre.trim()} » est enregistrée.` : "La section est ajoutée.");
         setErreursSection(retour.erreurs ?? {});
         setGeneral(retour.general ?? ECHEC);
       }
@@ -177,7 +194,7 @@ export function EditeurAccueil({ textes, tarifs, sections, children }: Props) {
             ) : cible.type === "nouvelle" && !cible.modele ? (
               <div className="choix-modele" role="group" aria-labelledby="choix-modele-titre">
                 <p id="choix-modele-titre">Quel genre de section ?</p>
-                {(Object.keys(MODELES) as ModeleT18[]).map((m) => (
+                {(Object.keys(MODELES) as ModeleSection[]).map((m) => (
                   <button key={m} type="button" className="carte-modele" onClick={() => setCible({ ...cible, modele: m })}>
                     <strong>{MODELES[m].libelle}</strong>
                     <span>{MODELES[m].aide}</span>
@@ -206,6 +223,31 @@ export function EditeurAccueil({ textes, tarifs, sections, children }: Props) {
                       <p className="aide">Laissez une ligne vide entre deux paragraphes.</p>
                       {erreurSection("texte")}
                     </div>
+                    {modele === "texte_photo" && (
+                      <>
+                        <div className="champ">
+                          <label htmlFor="section-photo">Photo</label>
+                          {saisieSection.imageCle && (
+                            // eslint-disable-next-line @next/next/no-img-element -- aperçu d'une image déjà rangée dans D1
+                            <img className="apercu-photo" src={`/images/${saisieSection.imageCle}`} alt="" />
+                          )}
+                          <input ref={champPhoto} id="section-photo" type="file" accept={FORMATS} disabled={enCours}
+                            aria-invalid={!!erreursSection.image} aria-describedby="section-photo-aide section-image-erreur" />
+                          <p id="section-photo-aide" className="aide">
+                            {saisieSection.imageCle ? "Choisissez une autre photo pour la remplacer. " : ""}JPEG, PNG, WebP ou HEIC, 10 Mo au plus. Elle sera réduite avant l’envoi.
+                          </p>
+                          {erreursSection.image && <p id="section-image-erreur" className="erreur">{erreursSection.image}</p>}
+                        </div>
+                        <div className="champ">
+                          <label htmlFor="section-image-alt">Description de la photo</label>
+                          <input id="section-image-alt" value={saisieSection.imageAlt ?? ""} maxLength={LIMITES_SECTION.description + 40} autoComplete="off"
+                            onChange={(ev) => setSaisieSection((s) => ({ ...s, imageAlt: ev.target.value }))}
+                            aria-invalid={!!erreursSection.imageAlt} aria-describedby="section-image-alt-aide section-imageAlt-erreur" />
+                          <p id="section-image-alt-aide" className="aide">Ce que montre la photo, pour les personnes qui ne la voient pas.</p>
+                          {erreursSection.imageAlt && <p id="section-imageAlt-erreur" className="erreur">{erreursSection.imageAlt}</p>}
+                        </div>
+                      </>
+                    )}
                     {modele === "texte_liste" && (
                       <>
                         <div className="champ">
