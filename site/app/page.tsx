@@ -63,9 +63,9 @@ export default async function Accueil() {
             </div>
             <div className="etiquette">
               <dl>
-                <dt>Praticienne</dt><dd>Océane</dd>
+                <dt>Prénom</dt><dd>Océane</dd>
                 <dt>Pratique</dt><dd>Naturopathie</dd>
-                <dt>Spécialité</dt><dd>accompagnement sportif</dd>
+                <dt>Spécialités</dt><dd>accompagnement sportif, gestion du stress</dd>
                 <dt>Lieu</dt><dd>En visio</dd>
               </dl>
             </div>

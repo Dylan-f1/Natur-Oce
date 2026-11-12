@@ -33,11 +33,11 @@ const INDEXABLE = false;
 export const metadata: Metadata = {
   metadataBase: new URL("https://natur-oce.fr"),
   title: {
-    default: "Natur’Océ · Naturopathie en visio, spécialité accompagnement sportif",
+    default: "Natur’Océ · Naturopathie en visio, accompagnement sportif et gestion du stress",
     template: "%s · Natur’Océ",
   },
   description:
-    "Océane Serrière, naturopathe en visio, avec une spécialité en accompagnement sportif.",
+    "Océane Serrière, naturopathe en visio, spécialisée dans l’accompagnement sportif et la gestion du stress.",
   openGraph: { locale: "fr_FR", siteName: "Natur’Océ", type: "website" },
   robots: { index: INDEXABLE, follow: INDEXABLE },
 };
