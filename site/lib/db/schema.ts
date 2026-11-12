@@ -14,6 +14,16 @@ export const tarif = sqliteTable("tarif", {
 
 export type Tarif = typeof tarif.$inferSelect;
 
+/**
+ * Textes de l'accueil modifiables par Océane (specs/SPEC-textes.md, EF-19, D-23). `cle` parmi
+ * celles de lib/textes.ts ; une clé absente prend sa valeur de départ. Texte brut, jamais du HTML.
+ */
+export const texte = sqliteTable("texte", {
+  cle: text("cle").primaryKey(),
+  valeur: text("valeur").notNull(), // limites dans lib/textes.ts
+  modifieLe: integer("modifie_le").notNull(),
+});
+
 /** Catégories d'articles, créées librement par Océane (30 caractères max). */
 export const categorie = sqliteTable("categorie", {
   id: text("id").primaryKey(),

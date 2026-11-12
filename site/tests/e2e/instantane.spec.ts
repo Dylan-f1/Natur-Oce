@@ -45,7 +45,8 @@ test.describe("Instantané des pages publiques", () => {
     const sortie = instantane("--serveur", baseURL!);
     expect(sortie).toContain("/conseils/bien-dormir → conseils/bien-dormir.html");
     expect(sortie).toContain("/conseils/categorie/sommeil → conseils/categorie/sommeil.html");
-    expect(sortie).toContain("7 page(s) écrite(s)"); // /, /conseils, 2 articles, 1 catégorie, 2 retours du formulaire
+    expect(sortie).toContain("8 page(s) écrite(s)"); // /, /conseils, 2 articles, 1 catégorie, confidentialité, 2 retours du formulaire
+    expect(sortie).toContain("/confidentialite → confidentialite.html");
     expect(sortie).not.toContain("brouillon-cache");
     expect(sortie).not.toContain("plantes");
   });
@@ -74,7 +75,7 @@ test.describe("Instantané des pages publiques", () => {
 
   test("relancer l'instantané remplace l'ancien sans le recopier", async ({ request, baseURL }) => {
     const sortie = instantane("--serveur", baseURL!);
-    expect(sortie).toContain("7 fichier(s) de l'instantané précédent retiré(s)");
+    expect(sortie).toContain("8 fichier(s) de l'instantané précédent retiré(s)");
     await expect.poll(() => texte(request, "/conseils/bien-dormir"), { timeout: 30_000 }).toContain("Titre changé après coup");
     expect(await texte(request, "/conseils/bien-dormir")).toContain(MARQUE);
   });

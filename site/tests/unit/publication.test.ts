@@ -30,6 +30,7 @@ describe("adressesPubliques", () => {
       "/conseils/plantes-hiver",
       "/conseils/categorie/sommeil",
       "/conseils/categorie/sport",
+      "/confidentialite",
       "/contact/envoyee",
       "/contact/non-envoyee",
     ]);
@@ -41,8 +42,8 @@ describe("adressesPubliques", () => {
     expect(adresses).not.toContain("/conseils/categorie/souplesse");
   });
 
-  it("sans article : l'accueil, /conseils et les pages de retour du formulaire", () => {
-    expect(adressesPubliques([])).toEqual(["/", "/conseils", "/contact/envoyee", "/contact/non-envoyee"]);
+  it("sans article : l'accueil, /conseils, la confidentialité et les pages de retour du formulaire", () => {
+    expect(adressesPubliques([])).toEqual(["/", "/conseils", "/confidentialite", "/contact/envoyee", "/contact/non-envoyee"]);
   });
 
   it("une catégorie partagée par plusieurs articles n'apparaît qu'une fois", () => {

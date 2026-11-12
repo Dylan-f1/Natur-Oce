@@ -32,7 +32,9 @@ export default defineConfig({
       // est fictif et l'API pointe sur le faux GitHub : aucun appel au vrai.
       command:
         `npx wrangler d1 migrations apply natur-oce --local && npx opennextjs-cloudflare build && ` +
-        `npx wrangler dev --port ${PORT} --ip 127.0.0.1 ` +
+        // Origine locale gardée : sinon wrangler présente les requêtes comme venant de natur-oce.fr
+        // (première route de wrangler.jsonc), et les liens de connexion pointeraient vers le site en ligne.
+        `npx wrangler dev --port ${PORT} --ip 127.0.0.1 --infer-origin-from-routes=false ` +
         `--var GITHUB_PUBLICATION_TOKEN:jeton-de-test --var GITHUB_API_URL:${FAUX_GITHUB}`,
       url: `http://127.0.0.1:${PORT}/`,
       timeout: 300_000, // build Next + OpenNext + démarrage de workerd
