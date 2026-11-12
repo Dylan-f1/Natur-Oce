@@ -2,14 +2,17 @@ import Image from "next/image";
 import { connection } from "next/server";
 import { listerArticlesPublies } from "@/lib/db/articles";
 import { listerTarifs } from "@/lib/db/tarifs";
+import { listerTextes } from "@/lib/db/textes";
 import { formaterDuree, formaterPrix } from "@/lib/tarifs";
+import { lignes, paragraphes, sansPointFinal } from "@/lib/textes";
 import { EnTete } from "./_composants/EnTete";
 import { FormulaireContact } from "./_composants/FormulaireContact";
 import { PiedDePage } from "./_composants/PiedDePage";
 import { PlancheArticle } from "./_composants/PlancheArticle";
 
 // Accueil — porté tel quel depuis design/accueil.html (maquette validée le 10/11/2026).
-// Les textes entre crochets sont à fournir par Océane ; les 3 derniers articles viennent de D1 (EF-06).
+// Six textes viennent de D1, modifiables par Océane (EF-19, lib/textes.ts) : vides, ils ne
+// s'affichent pas. Les 3 derniers articles viennent aussi de D1 (EF-06).
 
 /** Sans articles lisibles (base indisponible), l'accueil affiche « Les premiers conseils arrivent bientôt. » */
 function erreurArticles(erreur: unknown) {
@@ -19,7 +22,14 @@ function erreurArticles(erreur: unknown) {
 
 export default async function Accueil() {
   await connection(); // rendu à chaque visite : tarifs et articles viennent de D1 (EF-06, EF-12)
-  const [tarifs, articles] = await Promise.all([listerTarifs(), listerArticlesPublies(3).catch(erreurArticles)]);
+  const [tarifs, textes, articles] = await Promise.all([
+    listerTarifs(),
+    listerTextes(),
+    listerArticlesPublies(3).catch(erreurArticles),
+  ]);
+  const themes = lignes(textes.themes);
+  const outil = sansPointFinal(textes.outil_visio);
+  const duree = sansPointFinal(textes.duree_bilan);
 
   return (
     <>
@@ -66,24 +76,17 @@ export default async function Accueil() {
           <div className="cadre">
             <div className="sport-titre">
               <h2 id="titre-sport">Ma spécialité : les sportifs</h2>
-              <p>
-                Que vous prépariez une course ou que vous repreniez le sport, on adapte votre hygiène
-                de vie à votre entraînement.{" "}
-                <em className="afournir">[À FOURNIR : ton texte sur la spécialité]</em>
-              </p>
+              {paragraphes(textes.specialite).map((p, i) => <p key={i}>{p}</p>)}
               <a className="bouton clair" href="#contact">Demander une séance</a>
             </div>
-            <div className="sport-themes">
-              <h3>Ce que l’on travaille ensemble</h3>
-              <ul>
-                <li>L’alimentation autour de l’entraînement</li>
-                <li>La récupération</li>
-                <li>La préparation d’une saison ou d’une course</li>
-              </ul>
-              <p className="precision">
-                <em className="afournir">[Exemples : liste à confirmer par Océane]</em>
-              </p>
-            </div>
+            {themes.length > 0 && (
+              <div className="sport-themes">
+                <h3>Ce que l’on travaille ensemble</h3>
+                <ul>
+                  {themes.map((t, i) => <li key={i}>{t}</li>)}
+                </ul>
+              </div>
+            )}
           </div>
         </section>
 
@@ -91,11 +94,8 @@ export default async function Accueil() {
           <div className="cadre grille">
             <div className="col-titre"><h2 id="titre-approche">Mon approche</h2></div>
             <div className="col-corps">
-              <p><em className="afournir">[À FOURNIR : ton texte de présentation, ton parcours]</em></p>
-              <p>
-                Formée à la naturopathie de 2020 à 2023.{" "}
-                <em className="afournir">[À FOURNIR : nom de l’école]</em>
-              </p>
+              {paragraphes(textes.approche).map((p, i) => <p key={i}>{p}</p>)}
+              {textes.formation && <p>{textes.formation}</p>}
             </div>
           </div>
         </section>
@@ -112,18 +112,15 @@ export default async function Accueil() {
                 <li>
                   <div>
                     <h3>On fixe un rendez-vous</h3>
-                    <p>
-                      Je vous réponds par mail avec un lien de visio{" "}
-                      <em className="afournir">[outil À FOURNIR]</em>.
-                    </p>
+                    <p>Je vous réponds par mail avec un lien de visio{outil ? ` ${outil}` : ""}.</p>
                   </div>
                 </li>
                 <li>
                   <div>
                     <h3>Le bilan</h3>
                     <p>
-                      Durée <em className="afournir">[À FOURNIR]</em>. On fait le point sur votre
-                      hygiène de vie et, si vous êtes sportif, sur votre pratique.
+                      {duree ? `Durée ${duree}. ` : ""}On fait le point sur votre hygiène de vie et, si vous êtes
+                      sportif, sur votre pratique.
                     </p>
                   </div>
                 </li>
