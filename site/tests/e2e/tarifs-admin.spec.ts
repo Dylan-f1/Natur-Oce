@@ -67,7 +67,7 @@ test.describe("Tarifs dans l'administration", () => {
     expect(await appelsPublication()).toHaveLength(1);
 
     await page.goto("/");
-    const lignes = page.locator(".tarifs > span");
+    const lignes = page.locator(".tarifs > li");
     await expect(lignes.nth(1)).toHaveText(new RegExp(`^Suivi 65${esp}€$`));
   });
 
@@ -108,9 +108,9 @@ test.describe("Tarifs dans l'administration", () => {
 
     expect(enBase().map((l) => [l.libelle, l.ordre])).toEqual([["Séance sportive", 0], ["Bilan", 1]]);
     await page.goto("/");
-    await expect(page.locator(".tarifs > span")).toHaveText([
-      new RegExp(`^Séance sportive \\(1 h\\) 70${esp}€$`),
-      new RegExp(`^Bilan \\(1 h 30\\) 75${esp}€$`),
+    await expect(page.locator(".tarifs > li")).toHaveText([
+      new RegExp(`^Séance sportive 1 h 70${esp}€$`),
+      new RegExp(`^Bilan 1 h 30 75${esp}€$`),
     ]);
   });
 
