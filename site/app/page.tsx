@@ -5,6 +5,7 @@ import { listerTarifs } from "@/lib/db/tarifs";
 import { listerTextes } from "@/lib/db/textes";
 import { ContenuAccueil } from "./_composants/ContenuAccueil";
 import { EnTete } from "./_composants/EnTete";
+import { FenetreArticles } from "./_composants/FenetreArticles";
 import { PiedDePage } from "./_composants/PiedDePage";
 
 // Accueil public : les données viennent de D1 (textes EF-19, tarifs EF-12, 3 derniers articles
@@ -32,6 +33,7 @@ export default async function Accueil() {
         <ContenuAccueil textes={textes} tarifs={tarifs} articles={articles} sections={sections} />
       </main>
       <PiedDePage />
+      <FenetreArticles />
     </>
   );
 }
