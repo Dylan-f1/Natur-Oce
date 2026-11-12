@@ -162,6 +162,27 @@
   .lien-instagram:active svg { transform: scale(.92); }
   @media (hover: hover) and (pointer: fine) { .lien-instagram:hover { color: var(--or-texte); } }
 
+  /* Fenêtre centrée (option A du 12/11) : confidentialité, puis articles (T16). */
+  html.fenetre-ouverte { overflow: hidden; }
+  .fenetre { width: min(46rem, calc(100vw - 2rem)); max-width: none; height: min(88svh, 60rem); max-height: none; padding: 0; border: 0; border-radius: 4px;
+    background: var(--papier); color: var(--encre); box-shadow: 0 30px 60px -20px rgba(52,58,32,.55); overflow: hidden; }
+  .fenetre::backdrop { background: rgba(52, 58, 32, .55); }
+  .fenetre-defile { height: 100%; overflow-y: auto; overscroll-behavior: contain; }
+  .fenetre-barre { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: .6rem .6rem .6rem clamp(1.25rem, 4vw, 2.5rem); background: var(--papier); border-bottom: 1px solid var(--filet); }
+  .fenetre-titre { font: 400 clamp(1.5rem, 3vw, 2rem)/1.15 var(--titre); color: var(--olive-fonce); margin: 0; }
+  .fenetre-fermer { font: inherit; font-size: 1rem; color: var(--olive-fonce); min-width: 44px; min-height: 44px; padding: 0 1rem; cursor: pointer;
+    border: 1px solid var(--filet); background: var(--etiquette); border-radius: 2px; touch-action: manipulation; }
+  .fenetre-corps { padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1.25rem, 4vw, 2.5rem) clamp(2rem, 5vw, 3rem); }
+  .fenetre-chapeau { font-size: 1.2rem; line-height: 1.55; max-width: 44ch; margin: 0 0 1.5rem; }
+  @media (hover: hover) and (pointer: fine) { .fenetre-fermer:hover { background: var(--feuille); } }
+  @media (prefers-reduced-motion: no-preference) {
+    .fenetre[open] { animation: fenetre-entre .24s cubic-bezier(.23, 1, .32, 1); }
+    .fenetre[open]::backdrop { animation: fenetre-fond .22s ease-out; }
+    @keyframes fenetre-entre { from { opacity: 0; transform: translateY(8px) scale(.97); } }
+    @keyframes fenetre-fond { from { opacity: 0; } }
+  }
+
   /* ---------- Tablette ---------- */
   @media (max-width: 1024px) {
     .marque span { display: none; }
@@ -176,6 +197,7 @@
     .planche:first-child, .planche:first-child:nth-last-child(2), .planche:nth-child(2):last-child { grid-column: 1 / -1; }
   }
   /* ---------- Mobile ---------- */
+  @media (max-width: 760px) { .fenetre { width: 100vw; height: 100dvh; max-height: 100dvh; border-radius: 0; } }
   @media (max-width: 760px) {
     .marque img { width: 56px; height: 56px; }
     .entete { flex-wrap: wrap; column-gap: .75rem; padding-bottom: .25rem; }

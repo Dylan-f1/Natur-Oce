@@ -1,5 +1,9 @@
 // Pied de page du site public, avec l'avertissement médical (EF-15) et le lien Instagram (EF-13).
 // Le logo Instagram est dessiné ici (SVG) : aucune ressource chargée depuis Instagram (RSE-03).
+// « Confidentialité » s'ouvre dans une fenêtre (demande de Dylan du 12/11) ; la page reste pour les liens directs.
+
+import { Fenetre } from "./Fenetre";
+import { CHAPEAU_CONFIDENTIALITE, TexteConfidentialite } from "./TexteConfidentialite";
 
 export const INSTAGRAM = "https://www.instagram.com/natur_oce/";
 
@@ -23,7 +27,12 @@ export function PiedDePage() {
         </p>
         <ul>
           <li><a href="#">Mentions légales</a></li>
-          <li><a href="/confidentialite">Confidentialité</a></li>
+          <li>
+            <Fenetre href="/confidentialite" libelle="Confidentialité" titre="Confidentialité">
+              <p className="fenetre-chapeau">{CHAPEAU_CONFIDENTIALITE}</p>
+              <TexteConfidentialite titres="h3" />
+            </Fenetre>
+          </li>
           <li>
             <a className="lien-instagram" href={INSTAGRAM} target="_blank" rel="noopener noreferrer"
               aria-label="Instagram de Natur’Océ (nouvel onglet)" title="Instagram de Natur’Océ">

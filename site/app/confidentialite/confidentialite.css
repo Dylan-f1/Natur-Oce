@@ -2,11 +2,3 @@
 .page-texte { padding-block: clamp(2.5rem, 7vw, 5rem) clamp(4rem, 9vw, 7rem); max-width: calc(44rem + 2 * var(--ligne)); margin-inline: 0; }
 .page-texte .titre-page { font: 400 clamp(2.2rem, 4.5vw, 3.6rem)/1.05 var(--titre); color: var(--olive-fonce); margin: 0 0 1rem; }
 .page-texte .chapeau-texte { font-size: clamp(1.2rem, 1.5vw, 1.4rem); line-height: 1.55; max-width: 40ch; margin: 0 0 2.5rem; }
-.page-texte h2 { font: 400 clamp(1.5rem, 2.4vw, 1.9rem)/1.2 var(--titre); color: var(--olive-fonce); margin: 2.5rem 0 .6rem; }
-.page-texte p, .page-texte li { max-width: 62ch; }
-.page-texte p { margin: 0 0 1rem; }
-.page-texte ul { margin: 0 0 1rem; padding-left: 1.2rem; }
-.page-texte li { margin-bottom: .4rem; }
-.page-texte strong { font-weight: 500; }
-.page-texte a { color: var(--or-texte); text-underline-offset: 4px; overflow-wrap: anywhere; }
-.page-texte .mise-a-jour { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--filet); font-style: italic; font-size: 1rem; }
