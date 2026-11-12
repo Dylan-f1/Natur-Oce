@@ -41,7 +41,7 @@ export default async function MonAccueil() {
   return (
     <EditeurAccueil
       textes={textes}
-      sections={sections.map((s) => ({ id: s.id, modele: s.modele, titre: s.titre, texte: s.texte, liste: s.liste, bouton: s.bouton }))}
+      sections={sections.map((s) => ({ id: s.id, modele: s.modele, titre: s.titre, texte: s.texte, liste: s.liste, bouton: s.bouton, imageCle: s.imageCle, imageAlt: s.imageAlt }))}
       tarifs={tarifs.map((t) => ({
         id: t.id,
         libelle: t.libelle,
