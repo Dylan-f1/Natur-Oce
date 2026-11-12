@@ -126,19 +126,20 @@ export default async function Accueil() {
                 </li>
                 <li><div><h3>Votre programme</h3><p>Vous recevez des conseils écrits, à suivre à votre rythme.</p></div></li>
               </ol>
-              <div className="tarifs">
-                {tarifs.length === 0 ? (
-                  <span>Tarifs sur demande</span>
-                ) : (
-                  tarifs.map((t) => (
-                    <span key={t.id}>
-                      {t.libelle}
-                      {t.dureeMinutes ? ` (${formaterDuree(t.dureeMinutes)})` : ""}{" "}
-                      <strong>{formaterPrix(t.prixCentimes)}</strong>
-                    </span>
-                  ))
-                )}
-              </div>
+              {/* Une étiquette d'herbier par séance (choix du 12/11, design/propositions.html, option A). */}
+              {tarifs.length === 0 ? (
+                <p className="tarifs tarifs-vide">Tarifs sur demande</p>
+              ) : (
+                <ul className="tarifs" aria-label="Tarifs des séances">
+                  {tarifs.map((t) => (
+                    <li key={t.id} className="tarif">
+                      <span className="tarif-nom">{t.libelle}</span>
+                      {t.dureeMinutes ? <>{" "}<span className="tarif-duree">{formaterDuree(t.dureeMinutes)}</span></> : null}{" "}
+                      <span className="tarif-prix">{formaterPrix(t.prixCentimes)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <p className="avert">
                 La naturopathie ne remplace pas un avis médical : continuez vos traitements et
                 consultez votre médecin.
