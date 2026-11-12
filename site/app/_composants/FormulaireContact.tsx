@@ -16,14 +16,15 @@ const ORDRE: (keyof ErreursContact)[] = ["prenom", "email", "disponibilites", "m
 
 type Retour = { ok: boolean; erreurs?: ErreursContact; general?: string };
 
-export function FormulaireContact() {
+/** `edition` : dans « Mon accueil », ouvert et inactif (on le voit, on ne peut pas l'envoyer). */
+export function FormulaireContact({ edition = false }: { edition?: boolean }) {
   const formulaire = useRef<HTMLFormElement>(null);
   const confirmation = useRef<HTMLDivElement>(null);
   const [erreurs, setErreurs] = useState<ErreursContact>({});
   const [general, setGeneral] = useState<string | null>(null);
   const [enCours, setEnCours] = useState(false);
   const [envoyee, setEnvoyee] = useState(false);
-  const [ouvert, setOuvert] = useState(false);
+  const [ouvert, setOuvert] = useState(edition);
   const [vientDOuvrir, setVientDOuvrir] = useState(false);
 
   // Tous les « Demander une séance » de la page mènent à #contact : ils ouvrent aussi le formulaire.
@@ -135,7 +136,7 @@ export function FormulaireContact() {
       )}
       {/* Sans JavaScript : formulaire ouvert, bouton masqué (le bouton ne ferait rien). */}
       <noscript dangerouslySetInnerHTML={{ __html: "<style>.formulaire-contact.replie{display:grid}.ouvrir-contact{display:none}</style>" }} />
-    <form ref={formulaire} id="formulaire-contact" action="/api/contact" method="post" onSubmit={envoyer}
+    <form ref={formulaire} id="formulaire-contact" action="/api/contact" method="post" onSubmit={envoyer} inert={edition || undefined}
       className={["formulaire-contact", ouvert ? "" : "replie", vientDOuvrir ? "vient-d-ouvrir" : ""].filter(Boolean).join(" ")}>
       {general && <p role="alert" className="erreur-generale">{general}</p>}
 

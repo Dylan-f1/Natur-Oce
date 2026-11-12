@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { remplacerTarifs } from "@/lib/db/tarifs";
-import { lancerPublication } from "@/lib/publication/serveur";
+import { lancerPublication, type IssuePublication } from "@/lib/publication/serveur";
 import { exigerSession } from "@/lib/session";
 import { validerTarifs, type ErreursLigne, type LigneSaisie } from "@/lib/tarifs";
 
@@ -10,6 +10,7 @@ export type EtatTarifs = {
   erreurs?: Record<number, ErreursLigne>;
   general?: string;
   lignes?: LigneSaisie[]; // la saisie, rendue telle quelle en cas d'erreur
+  site?: IssuePublication; // enregistré (« Mon accueil » : pas de redirection)
 };
 
 /** La liste envoyée par le formulaire (champ caché `lignes`, en JSON), ou null si illisible. */
@@ -35,6 +36,17 @@ function lireLignes(donnees: FormData): LigneSaisie[] | null {
 
 /** Enregistre toute la liste des tarifs (EF-12) : tout ou rien, puis republie le site public. */
 export async function enregistrerTarifs(_etat: EtatTarifs, donnees: FormData): Promise<EtatTarifs> {
+  const retour = await sauverTarifs(donnees);
+  if (retour.site) redirect(`/admin/tarifs?enregistre=1&site=${retour.site}`);
+  return retour;
+}
+
+/** Même enregistrement depuis « Mon accueil » (EF-20) : le panneau se referme au lieu de changer de page. */
+export async function enregistrerTarifsAccueil(_etat: EtatTarifs, donnees: FormData): Promise<EtatTarifs> {
+  return sauverTarifs(donnees);
+}
+
+async function sauverTarifs(donnees: FormData): Promise<EtatTarifs> {
   await exigerSession();
 
   const lignes = lireLignes(donnees);
@@ -55,5 +67,5 @@ export async function enregistrerTarifs(_etat: EtatTarifs, donnees: FormData): P
     console.error("[tarifs] enregistrement impossible", erreur);
     return { general: "L’enregistrement a échoué. Réessayez dans un instant : votre saisie est conservée.", lignes };
   }
-  redirect(`/admin/tarifs?enregistre=1&site=${await lancerPublication()}`);
+  return { site: await lancerPublication() };
 }
