@@ -239,3 +239,4 @@ a.liste-titre:focus-visible { outline: 2px solid var(--olive); outline-offset: 3
 @media (hover: hover) and (pointer: fine) { .carte-modele:hover { border-color: var(--olive); } }
 .case { display: flex; align-items: center; gap: .6rem; min-height: 44px; }
 .case input { width: 1.2rem; height: 1.2rem; accent-color: var(--olive-fonce); }
+.apercu-photo { width: 100%; max-width: 20rem; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid var(--filet); }
