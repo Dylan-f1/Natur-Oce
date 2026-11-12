@@ -144,6 +144,11 @@
   footer p { margin: 0; font-style: italic; max-width: 60ch; }
   footer ul { list-style: none; padding: 0; margin: 0; display: flex; gap: 0 1.5rem; flex-wrap: wrap; }
   footer a { display: inline-block; padding-block: .7rem; }
+  footer ul { align-items: center; }
+  .lien-instagram { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; color: var(--olive-fonce); }
+  .lien-instagram svg { display: block; transition: transform .15s ease-out; }
+  .lien-instagram:active svg { transform: scale(.92); }
+  @media (hover: hover) and (pointer: fine) { .lien-instagram:hover { color: var(--or-texte); } }
 
   /* ---------- Tablette ---------- */
   @media (max-width: 1024px) {

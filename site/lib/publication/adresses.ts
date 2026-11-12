@@ -9,7 +9,7 @@ export const MARQUE = "instantane";
 export type LigneInstantane = { slug: string; statut: string; categorieSlug: string | null };
 
 /** Pages sans contenu de la base : retours du formulaire sans JavaScript (T12). */
-const PAGES_FIXES = ["/contact/envoyee", "/contact/non-envoyee"];
+const PAGES_FIXES = ["/confidentialite", "/contact/envoyee", "/contact/non-envoyee"];
 
 const SEGMENT = /^[a-z0-9-]{1,90}$/;
 const ADRESSE = /^\/(?:[a-z0-9-]{1,90}(?:\/[a-z0-9-]{1,90})*)?$/;
