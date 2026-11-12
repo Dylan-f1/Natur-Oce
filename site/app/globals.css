@@ -100,6 +100,13 @@
   .sport-themes ul { list-style: none; margin: 0; padding: 0; }
   .sport-themes li { padding: 1.1rem 0; border-bottom: 1px solid rgba(251,245,240,.28); font: 400 clamp(1.3rem, 1.8vw, 1.7rem)/1.3 var(--titre); }
   .sport-themes li:first-child { border-top: 1px solid rgba(251,245,240,.28); }
+  /* Gestion du stress : la même section, sur la feuille claire, titre à droite et thèmes à gauche. */
+  .stress { background: var(--feuille); color: var(--encre); margin-top: 0; }
+  .stress h2 { color: var(--olive-fonce); }
+  .stress .sport-titre { grid-column: 7 / 13; grid-row: 1; }
+  .stress .sport-themes { grid-column: 1 / 6; grid-row: 1; }
+  .stress .sport-themes h3 { color: var(--or-texte); }
+  .stress .sport-themes li { border-color: var(--filet); }
 
   /* ---------- Sections ---------- */
   .section { padding-block: clamp(4rem, 9vw, 8rem) 0; }
@@ -164,6 +171,7 @@
     .col-titre { grid-column: 1 / -1; }
     .col-corps { grid-column: 1 / -1; }
     .sport-titre, .sport-themes { grid-column: 1 / -1; }
+    .stress .sport-titre, .stress .sport-themes { grid-column: 1 / -1; grid-row: auto; }
     .planches { grid-template-columns: 1fr 1fr; }
     .planche:first-child, .planche:first-child:nth-last-child(2), .planche:nth-child(2):last-child { grid-column: 1 / -1; }
   }

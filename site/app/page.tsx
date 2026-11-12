@@ -28,6 +28,7 @@ export default async function Accueil() {
     listerArticlesPublies(3).catch(erreurArticles),
   ]);
   const themes = lignes(textes.themes);
+  const themesStress = lignes(textes.themes_stress);
   const outil = sansPointFinal(textes.outil_visio);
   const duree = sansPointFinal(textes.duree_bilan);
 
@@ -84,6 +85,25 @@ export default async function Accueil() {
                 <h3>Ce que l’on travaille ensemble</h3>
                 <ul>
                   {themes.map((t, i) => <li key={i}>{t}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Même construction que la section sport, en clair et en miroir (demande de Dylan du 12/11). */}
+        <section id="stress" className="sport stress" aria-labelledby="titre-stress">
+          <div className="cadre">
+            <div className="sport-titre">
+              <h2 id="titre-stress">Ma spécialité : la gestion du stress</h2>
+              {paragraphes(textes.stress).map((p, i) => <p key={i}>{p}</p>)}
+              <a className="bouton" href="#contact">Demander une séance</a>
+            </div>
+            {themesStress.length > 0 && (
+              <div className="sport-themes">
+                <h3>Ce que l’on travaille ensemble</h3>
+                <ul>
+                  {themesStress.map((t, i) => <li key={i}>{t}</li>)}
                 </ul>
               </div>
             )}

@@ -1,7 +1,16 @@
 // Textes de l'accueil modifiables par Océane (specs/SPEC-textes.md, EF-19, D-23) : logique pure,
 // testée dans tests/unit/textes.test.ts. Texte brut seulement : React l'échappe à l'affichage.
 
-export const CLES_TEXTES = ["specialite", "themes", "approche", "formation", "outil_visio", "duree_bilan"] as const;
+export const CLES_TEXTES = [
+  "specialite",
+  "themes",
+  "stress",
+  "themes_stress",
+  "approche",
+  "formation",
+  "outil_visio",
+  "duree_bilan",
+] as const;
 export type CleTexte = (typeof CLES_TEXTES)[number];
 export type Textes = Record<CleTexte, string>;
 
@@ -19,15 +28,30 @@ type Champ = {
 
 export const CHAMPS_TEXTES: Record<CleTexte, Champ> = {
   specialite: {
-    section: "Ma spécialité",
+    section: "Ma spécialité : les sportifs",
     libelle: "Votre texte sur l’accompagnement des sportifs",
     aide: "Laissez une ligne vide entre deux paragraphes.",
     forme: "paragraphes",
     max: 800,
   },
   themes: {
-    section: "Ma spécialité",
+    section: "Ma spécialité : les sportifs",
     libelle: "Ce que l’on travaille ensemble",
+    aide: "Un thème par ligne, 6 au plus.",
+    forme: "lignes",
+    max: 80,
+    maxLignes: 6,
+  },
+  stress: {
+    section: "Ma spécialité : la gestion du stress",
+    libelle: "Votre texte sur la gestion du stress",
+    aide: "Laissez une ligne vide entre deux paragraphes.",
+    forme: "paragraphes",
+    max: 800,
+  },
+  themes_stress: {
+    section: "Ma spécialité : la gestion du stress",
+    libelle: "Ce que l’on travaille ensemble (stress)",
     aide: "Un thème par ligne, 6 au plus.",
     forme: "lignes",
     max: 80,
@@ -68,6 +92,10 @@ export const VALEURS_DEPART: Textes = {
   specialite:
     "Que vous prépariez une course ou que vous repreniez le sport, on adapte votre hygiène de vie à votre entraînement.",
   themes: ["L’alimentation autour de l’entraînement", "La récupération", "La préparation d’une saison ou d’une course"].join("\n"),
+  // Brouillon du 12/11 pour la section ajoutée à la demande de Dylan : à remplacer par Océane.
+  stress:
+    "Rythme soutenu, sommeil en pointillé, tensions qui s’installent : on regarde ensemble votre hygiène de vie pour retrouver de l’équilibre au quotidien.",
+  themes_stress: ["Le sommeil", "L’alimentation au quotidien", "Les temps de pause et de respiration"].join("\n"),
   approche: "",
   formation: "Formée à la naturopathie de 2020 à 2023.",
   outil_visio: "",

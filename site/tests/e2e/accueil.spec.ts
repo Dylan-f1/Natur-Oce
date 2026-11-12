@@ -17,7 +17,7 @@ test.describe("Accueil", () => {
     await page.goto("/");
     // Depuis T12, le bouton de la section contact est devenu le formulaire lui-même.
     const liens = page.locator("a.bouton");
-    await expect(liens).toHaveCount(3);
+    await expect(liens).toHaveCount(4); // en-tête, ouverture, sport, stress
     for (const lien of await liens.all()) {
       await expect(lien).toHaveText("Demander une séance");
       await expect(lien).toHaveAttribute("href", /#contact$/);
