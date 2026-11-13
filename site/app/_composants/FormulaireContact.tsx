@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { CHAMP_PIEGE, LIMITES_CONTACT, MOTIF_EMAIL, validerDemande, type ErreursContact } from "@/lib/contact";
+import { CHAMP_PIEGE, CRENEAU, LIMITES_CONTACT, MOTIF_EMAIL, bornesJour, validerDemande, type ChampsContact, type ErreursContact } from "@/lib/contact";
 import "./formulaire-contact.css";
 
 // Demande de séance (specs/SPEC-contact.md, EF-04, RSE-04) : 4 champs, aucune question de santé.
@@ -12,7 +12,7 @@ import "./formulaire-contact.css";
 // depuis n'importe quel lien vers #contact. Sans JavaScript, il reste ouvert (balise noscript).
 
 const ECHEC = "L’envoi a échoué. Réessayez, ou écrivez à contact@natur-oce.fr.";
-const ORDRE: (keyof ErreursContact)[] = ["prenom", "email", "disponibilites", "message"];
+const ORDRE: (keyof ErreursContact)[] = ["prenom", "email", "jour", "heure", "message"];
 
 type Retour = { ok: boolean; erreurs?: ErreursContact; general?: string };
 
@@ -70,8 +70,12 @@ export function FormulaireContact({ edition = false }: { edition?: boolean }) {
   }, [ouvert]);
 
   // Avec JavaScript, nos messages remplacent ceux du navigateur (plus précis, en français du site).
+  const jour = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (formulaire.current) formulaire.current.noValidate = true;
+    // Bornes du calendrier calculées ici : la page est figée en fichier, la date du jour change.
+    const { min, max } = bornesJour();
+    if (jour.current) Object.assign(jour.current, { min, max });
   }, []);
 
   useEffect(() => {
@@ -84,16 +88,32 @@ export function FormulaireContact({ edition = false }: { edition?: boolean }) {
     if (premier) formulaire.current?.querySelector<HTMLElement>(`[name="${premier}"]`)?.focus();
   }
 
+  function lireChamps(form: HTMLFormElement): ChampsContact {
+    const donnees = new FormData(form);
+    const lire = (nom: string) => String(donnees.get(nom) ?? "");
+    return { prenom: lire("prenom"), email: lire("email"), jour: lire("jour"), heure: lire("heure"), message: lire("message"), site: lire(CHAMP_PIEGE) };
+  }
+
+  // En quittant un champ, ou en corrigeant un champ déjà signalé : son erreur s'affiche ou s'efface
+  // aussitôt (cadre rouge et phrase sous le champ), sans attendre l'envoi.
+  function verifierChamp(nom: string, seulementSiSignale: boolean) {
+    const champ = nom as keyof ErreursContact;
+    if (!formulaire.current || !ORDRE.includes(champ)) return;
+    if (seulementSiSignale && !erreurs[champ]) return;
+    const valeurs = lireChamps(formulaire.current);
+    // Un champ laissé vide sans y avoir rien écrit n'est signalé qu'à l'envoi.
+    if (!seulementSiSignale && (valeurs[champ as keyof ChampsContact] ?? "") === "") return;
+    const verdict = validerDemande(valeurs);
+    const message = verdict.statut === "invalide" ? verdict.erreurs[champ] : undefined;
+    setErreurs((e) => ({ ...e, [champ]: message }));
+  }
+
   async function envoyer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const donnees = new FormData(e.currentTarget);
-    const lire = (nom: string) => String(donnees.get(nom) ?? "");
     setGeneral(null);
 
-    const verdict = validerDemande({
-      prenom: lire("prenom"), email: lire("email"), disponibilites: lire("disponibilites"),
-      message: lire("message"), site: lire(CHAMP_PIEGE),
-    });
+    const verdict = validerDemande(lireChamps(e.currentTarget));
     if (verdict.statut === "invalide") return signaler(verdict.erreurs);
     setErreurs({});
 
@@ -126,6 +146,7 @@ export function FormulaireContact({ edition = false }: { edition?: boolean }) {
   });
   const erreur = (champ: keyof ErreursContact) =>
     erreurs[champ] && <p id={`contact-${champ}-erreur`} className="erreur-champ">{erreurs[champ]}</p>;
+  const etoile = <span className="obligatoire" aria-hidden="true"> *</span>;
 
   return (
     <>
@@ -137,33 +158,46 @@ export function FormulaireContact({ edition = false }: { edition?: boolean }) {
       {/* Sans JavaScript : formulaire ouvert, bouton masqué (le bouton ne ferait rien). */}
       <noscript dangerouslySetInnerHTML={{ __html: "<style>.formulaire-contact.replie{display:grid}.ouvrir-contact{display:none}</style>" }} />
     <form ref={formulaire} id="formulaire-contact" action="/api/contact" method="post" onSubmit={envoyer} inert={edition || undefined}
+      onBlur={(ev) => verifierChamp((ev.target as unknown as HTMLInputElement).name, false)}
+      onChange={(ev) => verifierChamp((ev.target as unknown as HTMLInputElement).name, true)}
       className={["formulaire-contact", ouvert ? "" : "replie", vientDOuvrir ? "vient-d-ouvrir" : ""].filter(Boolean).join(" ")}>
       {general && <p role="alert" className="erreur-generale">{general}</p>}
+      <p className="legende-obligatoire"><span aria-hidden="true">*</span> Champ obligatoire</p>
 
       <div className="champs-contact">
         <div className="champ-contact">
-          <label htmlFor="contact-prenom">Prénom</label>
+          <label htmlFor="contact-prenom">Prénom{etoile}</label>
           <input id="contact-prenom" name="prenom" required maxLength={LIMITES_CONTACT.prenom} autoComplete="given-name" {...aria("prenom")} />
           {erreur("prenom")}
         </div>
         <div className="champ-contact">
-          <label htmlFor="contact-email">E-mail</label>
+          <label htmlFor="contact-email">E-mail{etoile}</label>
           <input id="contact-email" name="email" type="email" required maxLength={254} autoComplete="email" pattern={MOTIF_EMAIL}
             title="Adresse complète, par exemple prenom@exemple.fr" {...aria("email")} />
           {erreur("email")}
         </div>
       </div>
 
-      <div className="champ-contact">
-        <label htmlFor="contact-disponibilites">Vos disponibilités <span className="facultatif">(facultatif)</span></label>
-        <input id="contact-disponibilites" name="disponibilites" maxLength={LIMITES_CONTACT.disponibilites} autoComplete="off"
-          {...aria("disponibilites", "contact-disponibilites-aide")} />
-        <p id="contact-disponibilites-aide" className="aide-champ">Par exemple : le mardi soir, le samedi matin.</p>
-        {erreur("disponibilites")}
-      </div>
+      <fieldset className="creneau-contact" aria-describedby="contact-creneau-aide">
+        <legend>Le créneau qui vous arrangerait <span className="facultatif">(facultatif)</span></legend>
+        <p id="contact-creneau-aide" className="aide-champ">Choisissez un jour et une heure : Océane vous confirme par mail.</p>
+        <div className="champs-creneau">
+          <div className="champ-contact">
+            <label htmlFor="contact-jour">Jour</label>
+            <input ref={jour} id="contact-jour" name="jour" type="date" {...aria("jour")} />
+            {erreur("jour")}
+          </div>
+          <div className="champ-contact">
+            <label htmlFor="contact-heure">Heure</label>
+            <input id="contact-heure" name="heure" type="time" min={CRENEAU.heureMin} max={CRENEAU.heureMax} step={CRENEAU.pasMinutes * 60}
+              {...aria("heure")} />
+            {erreur("heure")}
+          </div>
+        </div>
+      </fieldset>
 
       <div className="champ-contact">
-        <label htmlFor="contact-message">Votre message</label>
+        <label htmlFor="contact-message">Votre message{etoile}</label>
         <textarea id="contact-message" name="message" required rows={5} maxLength={LIMITES_CONTACT.message}
           {...aria("message", "contact-message-aide")} />
         <p id="contact-message-aide" className="aide-champ">Inutile de décrire vos problèmes de santé : on en parlera pendant la séance.</p>
