@@ -222,6 +222,7 @@ test.describe("Demande de séance", () => {
   });
 
   test("sur l'accueil figé (servi en fichier, comme en ligne), le formulaire envoie toujours (D-21)", async ({ page, request, baseURL }) => {
+    test.setTimeout(90_000); // fige l'accueil avec un second serveur, puis le nettoie
     const instantane = (...args: string[]) =>
       execFileSync(process.execPath, ["--disable-warning=MODULE_TYPELESS_PACKAGE_JSON", join(__dirname, "..", "..", "scripts", "instantane.ts"), ...args], {
         cwd: join(__dirname, "..", ".."), stdio: "pipe", encoding: "utf8",
