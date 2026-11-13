@@ -36,9 +36,7 @@ test.describe("Conseils publics", () => {
   });
 
   test("Given un article publié, sa page affiche le titre, le contenu et l'avertissement médical (EF-07, EF-15)", async ({ page }) => {
-    await page.goto("/conseils");
-    await page.getByRole("link", { name: /Bien dormir après l’effort/ }).click();
-    await expect(page).toHaveURL(/\/conseils\/bien-dormir$/);
+    await page.goto("/conseils/bien-dormir"); // ouverte directement : page entière (la fenêtre : fenetre-article.spec.ts)
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Bien dormir après l’effort");
     await expect(page.locator(".corps-article h2")).toHaveText("Intertitre");
     await expect(page.locator(".avert-article")).toBeVisible();

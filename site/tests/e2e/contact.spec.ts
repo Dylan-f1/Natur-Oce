@@ -12,11 +12,18 @@ test.describe.configure({ mode: "serial" });
 const ORIGINE = "http://127.0.0.1:8791";
 const CONFIRMATION = "Votre demande est envoyée.";
 
-async function remplir(page: Page, champs: { prenom?: string; email?: string; disponibilites?: string; message?: string }) {
+/** Demain à Paris, au format des champs date : toujours dans les bornes du calendrier. */
+function demain(): string {
+  const j = new Intl.DateTimeFormat("fr-CA", { timeZone: "Europe/Paris" }).format(new Date(Date.now() + 86_400_000));
+  return j;
+}
+
+async function remplir(page: Page, champs: { prenom?: string; email?: string; jour?: string; heure?: string; message?: string }) {
   const f = page.locator("#contact");
   if (champs.prenom !== undefined) await f.getByLabel("Prénom").fill(champs.prenom);
   if (champs.email !== undefined) await f.getByLabel("E-mail").fill(champs.email);
-  if (champs.disponibilites !== undefined) await f.getByLabel("Vos disponibilités").fill(champs.disponibilites);
+  if (champs.jour !== undefined) await f.getByLabel("Jour").fill(champs.jour);
+  if (champs.heure !== undefined) await f.getByLabel("Heure").fill(champs.heure);
   if (champs.message !== undefined) await f.getByLabel("Votre message").fill(champs.message);
 }
 
@@ -25,7 +32,7 @@ const envoyer = (page: Page) => page.locator("#contact").getByRole("button", { n
 /** Envoi direct, comme le fait le formulaire avec JavaScript. */
 function envoiDirect(request: APIRequestContext, prenom: string) {
   return request.post("/api/contact", {
-    form: { prenom, email: "lea@exemple.test", disponibilites: "", message: "Bonjour.", site: "" },
+    form: { prenom, email: "lea@exemple.test", jour: "", heure: "", message: "Bonjour.", site: "" },
     headers: { origin: ORIGINE, accept: "application/json" },
   });
 }
@@ -36,7 +43,7 @@ test.describe("Demande de séance", () => {
 
   test("Given un formulaire rempli, When le visiteur envoie, Then la confirmation remplace le formulaire et Océane reçoit la demande (EF-04)", async ({ page }) => {
     await page.goto("/#contact");
-    await remplir(page, { prenom: "Léa", email: "lea@exemple.test", disponibilites: "le mardi soir", message: "Bonjour, je prépare un semi-marathon." });
+    await remplir(page, { prenom: "Léa", email: "lea@exemple.test", jour: demain(), heure: "18:30", message: "Bonjour, je prépare un semi-marathon." });
     const depuis = Date.now();
     await envoyer(page);
 
@@ -47,7 +54,7 @@ test.describe("Demande de séance", () => {
 
     const texte = await attendreEmail(depuis);
     expect(texte).toContain("Nouvelle demande de séance de Léa (lea@exemple.test).");
-    expect(texte).toContain("Disponibilités : le mardi soir");
+    expect(texte).toMatch(/Disponibilités : \S+ \d+ \S+ \d{4} à 18 h 30/);
     expect(texte).toContain("Bonjour, je prépare un semi-marathon.");
   });
 
@@ -78,6 +85,27 @@ test.describe("Demande de séance", () => {
     expect(emailsDepuis(depuis)).toBe(0);
   });
 
+  test("les champs obligatoires portent un astérisque ; un champ mal rempli s'encadre en rouge dès qu'on le quitte, et se corrige en direct", async ({ page }) => {
+    await page.goto("/#contact");
+    const f = page.locator("#contact");
+    await expect(f.getByText("Champ obligatoire")).toBeVisible();
+    await expect(f.locator("label .obligatoire")).toHaveCount(3); // prénom, e-mail, message
+    await expect(f.getByLabel("Prénom")).toHaveAttribute("required", "");
+
+    await f.getByLabel("E-mail").fill("lea@");
+    await f.getByLabel("Votre message").focus(); // quitter le champ
+    await expect(f.getByText("Indiquez une adresse e-mail valide, par exemple prenom@exemple.fr.")).toBeVisible();
+    const bordure = await f.getByLabel("E-mail").evaluate((e) => getComputedStyle(e).borderTopColor);
+    expect(bordure).toBe("rgb(179, 38, 30)");
+    await f.getByLabel("E-mail").fill("lea@exemple.test");
+    await expect(f.getByText("Indiquez une adresse e-mail valide, par exemple prenom@exemple.fr.")).toHaveCount(0);
+    await expect(f.getByLabel("E-mail")).not.toHaveAttribute("aria-invalid", "true");
+
+    await f.getByLabel("Heure").fill("07:00");
+    await f.getByLabel("Votre message").focus();
+    await expect(f.getByText("Choisissez une heure entre 8 h et 20 h.")).toBeVisible();
+  });
+
   test("le champ piège est invisible et hors du parcours clavier ; rempli, il donne la même confirmation sans rien envoyer (ENF-04)", async ({ page }) => {
     await page.goto("/#contact");
     const piege = page.locator("#contact-site");
@@ -106,7 +134,7 @@ test.describe("Demande de séance", () => {
   test("un envoi démesuré est refusé avant d'être lu, sans rien envoyer (revue)", async ({ request }) => {
     const depuis = Date.now();
     const reponse = await request.post("/api/contact", {
-      form: { prenom: "Léa", email: "lea@exemple.test", disponibilites: "", message: "x".repeat(20_000), site: "" },
+      form: { prenom: "Léa", email: "lea@exemple.test", jour: "", heure: "", message: "x".repeat(20_000), site: "" },
       headers: { origin: ORIGINE, accept: "application/json" },
     });
     expect(reponse.status()).toBe(413);
@@ -116,7 +144,7 @@ test.describe("Demande de séance", () => {
 
   test("un envoi depuis un autre site est refusé", async ({ request }) => {
     const reponse = await request.post("/api/contact", {
-      form: { prenom: "X", email: "x@exemple.test", disponibilites: "", message: "x", site: "" },
+      form: { prenom: "X", email: "x@exemple.test", jour: "", heure: "", message: "x", site: "" },
       headers: { origin: "https://exemple.test", accept: "application/json" },
     });
     expect(reponse.status()).toBe(403);
@@ -127,7 +155,7 @@ test.describe("Demande de séance", () => {
     const tailles = await page.locator("#contact input:not([name='site']), #contact textarea").evaluateAll((els) =>
       els.map((e) => parseFloat(getComputedStyle(e).fontSize)),
     );
-    expect(tailles).toHaveLength(4);
+    expect(tailles).toHaveLength(5); // prénom, e-mail, jour, heure, message
     for (const t of tailles) expect(t).toBeGreaterThanOrEqual(16);
     const libelles = await page.locator("#contact label").allTextContents();
     expect(libelles.join(" ")).not.toMatch(/santé|symptôme|traitement|maladie/i);

@@ -1,6 +1,7 @@
 import type { ArticlePublic } from "@/lib/db/articles";
 import type { Categorie } from "@/lib/db/schema";
 import { EnTete } from "../_composants/EnTete";
+import { FenetreArticles } from "../_composants/FenetreArticles";
 import { PiedDePage } from "../_composants/PiedDePage";
 import { PlancheArticle } from "../_composants/PlancheArticle";
 
@@ -60,6 +61,7 @@ export function ListeConseils({ articles, categories, filtre }: Props) {
         )}
       </main>
       <PiedDePage />
+      <FenetreArticles />
     </>
   );
 }
