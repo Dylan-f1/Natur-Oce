@@ -78,7 +78,7 @@ function infos(lignes: [string, string][]): string {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:12px 0 20px;background:${C.feuille}"><tr><td style="padding:12px 16px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">${rangs}</table></td></tr></table>`;
 }
 
-function gabarit(titre: string, corpsHtml: string): string {
+function gabarit(titre: string, corpsHtml: string, pied: string = PIED): string {
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:${C.fond};font-family:Georgia,serif;color:${C.encre}">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:${C.fond}"><tr><td align="center" style="padding:24px 12px">
@@ -88,7 +88,7 @@ function gabarit(titre: string, corpsHtml: string): string {
 <h1 style="margin:0 0 16px;font-weight:normal;font-size:26px;line-height:1.2;color:${C.olive}">${echapperHtml(titre)}</h1>
 ${corpsHtml}
 </td></tr>
-<tr><td style="background:${C.feuille};padding:14px 24px;font-size:12px;color:${C.discret}">${PIED}</td></tr>
+<tr><td style="background:${C.feuille};padding:14px 24px;font-size:12px;color:${C.discret}">${pied}</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -199,5 +199,55 @@ ${boutons ? `<div style="margin:0 0 8px">${boutons}</div>` : ""}
 <p style="margin:8px 0 0;font-size:14px;color:${C.gris}">Vous pouvez aussi répondre directement à ce message.${agenda ? " Le créneau est joint en fichier d’agenda : ouvrez-le pour l’ajouter à votre calendrier." : ""}</p>`,
     ),
     ...(agenda ? { piecesJointes: [{ filename: "seance.ics", type: "text/calendar", content: agenda }] } : {}),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// E-mails au visiteur (specs/SPEC-emails-client.md, EF-05) : envoyés par Mailjet (lib/email/mailjet.ts).
+// N'importe qui peut taper n'importe quelle adresse : aucun texte libre du visiteur n'y est recopié,
+// sauf un prénom fait seulement de lettres (sinon « Bonjour, »). Le site ne sert pas de relais.
+
+const PIED_CLIENT = "Natur’Océ — naturopathie en visio · natur-oce.fr";
+const AVERT_CLIENT = "La naturopathie ne remplace pas un avis médical : continuez vos traitements et consultez votre médecin.";
+
+/** Prénom repris dans l'e-mail seulement s'il n'est fait que de lettres, espaces, apostrophes, traits d'union. */
+export function prenomSur(prenom: string): string | null {
+  const p = prenom.trim();
+  return /^[\p{L}][\p{L}\p{M}' ’-]{0,39}$/u.test(p) && !/\s{2,}/.test(p) ? p : null;
+}
+
+/** Accusé de réception d'une demande de séance (T20). */
+export function modeleAccuseReception(d: Pick<DemandeSeance, "prenom" | "disponibilites">): { sujet: string; texte: string; html: string; nom?: string } {
+  const prenom = prenomSur(d.prenom);
+  const bonjour = prenom ? `Bonjour ${prenom},` : "Bonjour,";
+  const creneau = d.disponibilites?.trim() || null;
+  return {
+    sujet: "Votre demande de séance est bien reçue",
+    nom: prenom ?? undefined,
+    texte: [
+      bonjour,
+      "",
+      "Merci pour votre message. Votre demande de séance en visio est bien reçue : Océane vous répond sous 48 heures pour confirmer le rendez-vous.",
+      ...(creneau ? ["", `Créneau demandé : ${creneau}`] : []),
+      "",
+      "Pour ajouter quelque chose, répondez simplement à ce message.",
+      "",
+      "À bientôt,",
+      "Océane",
+      "",
+      AVERT_CLIENT,
+      "",
+      PIED_CLIENT,
+    ].join("\n"),
+    html: gabarit(
+      "Votre demande est bien reçue",
+      `<p style="margin:0 0 12px">${echapperHtml(bonjour)}</p>
+<p style="margin:0 0 12px">Merci pour votre message. Votre demande de séance en visio est bien reçue : je vous réponds sous 48 heures pour confirmer le rendez-vous.</p>
+${creneau ? infos([["Créneau demandé", echapperHtml(creneau)]]) : ""}
+<p style="margin:0 0 12px;font-size:14px;color:${C.gris}">Pour ajouter quelque chose, répondez simplement à ce message.</p>
+<p style="margin:20px 0 0">À bientôt,<br><strong>Océane</strong></p>
+<p style="margin:20px 0 0;font-size:13px;line-height:1.5;color:${C.discret};font-style:italic">${AVERT_CLIENT}</p>`,
+      PIED_CLIENT,
+    ),
   };
 }
