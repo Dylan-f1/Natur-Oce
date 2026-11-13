@@ -1,6 +1,7 @@
 # Publication du site public en fichiers statiques (D-21).
 #
-# Lancée par l'administration après chaque enregistrement qui change le site public, ou à la main
+# Lancée par l'administration après chaque enregistrement qui change le site public, à chaque
+# fusion dans `main` qui touche le site (depuis le 13/11, demande de Dylan), ou à la main
 # (onglet Actions → « Publier le site » → Run workflow). Copie le contenu publié de la base en
 # ligne, construit le site, fige les pages publiques en HTML (npm run instantane) et déploie.
 #
@@ -11,6 +12,12 @@ name: Publier le site
 
 on:
   workflow_dispatch:
+  # Une fusion dans `main` met le site en ligne toute seule : plus de code fusionné mais pas publié.
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - ".github/workflows/publier.yml"
 
 # Une seule publication à la fois : une nouvelle demande annule celle en cours, la dernière gagne.
 concurrency:
