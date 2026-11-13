@@ -50,7 +50,8 @@ describe("modeleDemandeSeance (EF-04, ENF-06)", () => {
   it("échappe tout ce qui vient du visiteur dans le HTML", () => {
     const { html } = modeleDemandeSeance(demande);
     expect(html).not.toContain("<b>");
-    expect(html).not.toContain("<img");
+    expect(html.match(/<img/g)).toHaveLength(1); // le logo du bandeau, rien du visiteur
+    expect(html).not.toContain("onerror=alert(1)>");
     expect(html).toContain("&lt;img src=x onerror=alert(1)&gt;");
   });
 
@@ -89,3 +90,51 @@ describe("modeleLienConnexion", () => {
     expect(modeleLienConnexion(url).html).toContain("token=abc&amp;callbackURL");
   });
 });
+
+describe("e-mails « Bandeau olive » et réponses en un clic (13/11)", () => {
+  const demande = {
+    prenom: "Léa",
+    email: "lea@exemple.test",
+    disponibilites: "mercredi 18 novembre 2026 à 18 h 30",
+    creneau: { jour: "2026-11-18", heure: "18:30" },
+    message: "Bonjour, je prépare un semi-marathon.",
+  };
+
+  it("bandeau olive avec le logo en PNG", () => {
+    const { html } = modeleDemandeSeance(demande);
+    expect(html).toContain("background:#3D491B");
+    expect(html).toContain('src="https://natur-oce.fr/logo-email.png"');
+  });
+
+  it("deux boutons : « Confirmer ce créneau » et « Proposer un autre créneau », en mailto pré-rempli", () => {
+    const { html } = modeleDemandeSeance(demande);
+    const liens = [...html.matchAll(/href="(mailto:[^"]+)"/g)].map((m) => m[1].replace(/&amp;/g, "&"));
+    expect(liens).toHaveLength(2);
+    const confirmer = new URL(liens[0]);
+    expect(confirmer.pathname).toBe("lea@exemple.test");
+    expect(confirmer.searchParams.get("subject")).toBe("Votre séance du mercredi 18 novembre 2026 à 18 h 30");
+    expect(confirmer.searchParams.get("body")).toContain("je vous retrouve en visio le mercredi 18 novembre 2026 à 18 h 30");
+    expect(confirmer.searchParams.get("body")).toContain("[lien de visio]");
+    expect(html).toContain("Proposer un autre créneau");
+  });
+
+  it("sans créneau : un seul bouton « Proposer un créneau », pas de fichier d'agenda", () => {
+    const m = modeleDemandeSeance({ ...demande, disponibilites: undefined, creneau: undefined });
+    expect([...m.html.matchAll(/href="mailto:/g)]).toHaveLength(1);
+    expect(m.html).toContain("Proposer un créneau");
+    expect(m.piecesJointes).toBeUndefined();
+  });
+
+  it("adresse douteuse : aucun bouton mailto", () => {
+    expect(modeleDemandeSeance({ ...demande, email: "a b@c.d" }).html).not.toContain("mailto:");
+  });
+
+  it("le créneau est joint en seance.ics, et passe en pièce jointe à l'envoi", () => {
+    const m = modeleDemandeSeance(demande);
+    expect(m.piecesJointes?.[0]).toMatchObject({ filename: "seance.ics", type: "text/calendar" });
+    expect(m.piecesJointes?.[0].content).toContain("DTSTART:20261118T173000Z"); // 18 h 30 à Paris = 17 h 30 UTC
+    const envoi = preparerEnvoi(m, "oceane@exemple.test");
+    expect(envoi.attachments?.[0]).toMatchObject({ filename: "seance.ics", disposition: "attachment" });
+  });
+});
+
