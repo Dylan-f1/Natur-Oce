@@ -22,10 +22,12 @@
 }
 .champ-contact textarea { resize: vertical; min-height: 8rem; }
 .champ-contact input:focus-visible, .champ-contact textarea:focus-visible { outline: 2px solid var(--olive); outline-offset: 1px; border-color: var(--olive); }
-.champ-contact [aria-invalid="true"] { border-color: #9B3D1E; }
+/* Champ à corriger : cadre rouge épais et fond rosé, phrase rouge juste dessous (demande du 12/11). */
+.champ-contact [aria-invalid="true"] { border: 2px solid #B3261E; background: #FDF2EF; }
+.champ-contact [aria-invalid="true"]:focus-visible { outline-color: #B3261E; border-color: #B3261E; }
 
 .formulaire-contact .aide-champ { margin: 0; font-size: 0.95rem; color: #5C6448; max-width: none; }
-.formulaire-contact .erreur-champ { margin: 0; font-size: 0.95rem; color: #8A2F14; max-width: none; }
+.formulaire-contact .erreur-champ { margin: 0; font-size: 0.95rem; font-weight: 500; color: #8A2F14; max-width: none; }
 .formulaire-contact .erreur-generale { margin: 0; padding: 0.8rem 1rem; border-left: 3px solid #9B3D1E; background: var(--feuille); max-width: none; }
 
 .envoi-contact { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
@@ -49,4 +51,15 @@
 .formulaire-contact.vient-d-ouvrir { animation: ouvrir-contact 220ms cubic-bezier(.23, 1, .32, 1); }
 @keyframes ouvrir-contact { from { opacity: 0; transform: translateY(6px); } }
 @media (prefers-reduced-motion: reduce) { .formulaire-contact.vient-d-ouvrir { animation: none; } }
+
+/* Champs obligatoires et créneau souhaité (demande du 12/11). */
+.obligatoire { color: #8A2F14; font-weight: 500; }
+.formulaire-contact .legende-obligatoire { margin: 0; font-size: 0.95rem; color: #5C6448; max-width: none; }
+.legende-obligatoire span { color: #8A2F14; font-weight: 500; }
+.creneau-contact { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 0.4rem; }
+.creneau-contact legend { padding: 0; font-weight: 500; }
+.champs-creneau { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1.25rem; margin-top: 0.4rem; }
+.champs-creneau label { font-weight: 400; }
+.champ-contact input[type="date"], .champ-contact input[type="time"] { min-height: 3rem; }
+@media (max-width: 480px) { .champs-creneau { grid-template-columns: minmax(0, 1fr); } }
 

@@ -51,7 +51,8 @@ export async function POST(requete: Request): Promise<Response> {
   const verdict = validerDemande({
     prenom: champ("prenom"),
     email: champ("email"),
-    disponibilites: champ("disponibilites"),
+    jour: champ("jour"),
+    heure: champ("heure"),
     message: champ("message"),
     site: champ("site"),
   });
