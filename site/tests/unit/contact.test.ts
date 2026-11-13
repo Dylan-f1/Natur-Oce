@@ -15,7 +15,7 @@ describe("validerDemande", () => {
   it("une demande complète est acceptée, champs nettoyés", () => {
     expect(validerDemande({ ...valide, prenom: "  Léa ", email: " lea@exemple.test " })).toEqual({
       statut: "valide",
-      demande: { prenom: "Léa", email: "lea@exemple.test", disponibilites: "mercredi 18 novembre 2026 à 18 h 30", message: "Bonjour, je prépare un semi-marathon." },
+      demande: { prenom: "Léa", email: "lea@exemple.test", disponibilites: "mercredi 18 novembre 2026 à 18 h 30", creneau: { jour: "2026-11-18", heure: "18:30" }, message: "Bonjour, je prépare un semi-marathon." },
     });
   });
 

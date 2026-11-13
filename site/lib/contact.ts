@@ -99,5 +99,5 @@ export function validerDemande(champs: ChampsContact, maintenant: Date = new Dat
   }
 
   if (Object.keys(erreurs).length > 0) return { statut: "invalide", erreurs };
-  return { statut: "valide", demande: { prenom, email, disponibilites: jour ? creneauEnLettres(jour, heure) : undefined, message } };
+  return { statut: "valide", demande: { prenom, email, disponibilites: jour ? creneauEnLettres(jour, heure) : undefined, creneau: jour ? { jour, heure } : undefined, message } };
 }
