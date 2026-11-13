@@ -1,6 +1,7 @@
 import { origineDesEntetes } from "@/lib/auth";
 import { LIMITE_ENVOIS, TAILLE_MAX_DEMANDE, validerDemande, type ErreursContact } from "@/lib/contact";
 import { envoyerAOceane } from "@/lib/email";
+import { envoyerAccuse } from "@/lib/email/client";
 import { modeleDemandeSeance } from "@/lib/email/modeles";
 import { cleLimite, compterTentative, ipDuVisiteur } from "@/lib/limite";
 
@@ -72,5 +73,7 @@ export async function POST(requete: Request): Promise<Response> {
   } catch {
     return repondre(502, { ok: false, general: ECHEC_ENVOI }); // déjà journalisé par lib/email
   }
+  // Accusé de réception au visiteur (EF-05, T20) : au mieux, ne change jamais la réponse.
+  await envoyerAccuse(verdict.demande);
   return repondre(200, { ok: true });
 }

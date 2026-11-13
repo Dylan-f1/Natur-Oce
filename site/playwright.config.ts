@@ -5,6 +5,7 @@ import { defineConfig } from "@playwright/test";
 // Port 8791 pour ne pas gêner l'aperçu manuel (`natur-oce-site`, port 8790).
 const PORT = 8791;
 const FAUX_GITHUB = "http://127.0.0.1:8796";
+const FAUX_MAILJET = "http://127.0.0.1:8797";
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -28,6 +29,14 @@ export default defineConfig({
       stderr: "pipe",
     },
     {
+      // Faux Mailjet (T20) : reçoit les accusés de réception à la place du vrai.
+      command: `node tests/e2e/outils/faux-mailjet.mjs`,
+      url: `${FAUX_MAILJET}/_faux/sante`,
+      reuseExistingServer: false,
+      stdout: "ignore",
+      stderr: "pipe",
+    },
+    {
       // Migrations D1 locales d'abord (idempotent), puis build Cloudflare, puis workerd. Le jeton
       // est fictif et l'API pointe sur le faux GitHub : aucun appel au vrai.
       command:
@@ -35,7 +44,8 @@ export default defineConfig({
         // Origine locale gardée : sinon wrangler présente les requêtes comme venant de natur-oce.fr
         // (première route de wrangler.jsonc), et les liens de connexion pointeraient vers le site en ligne.
         `npx wrangler dev --port ${PORT} --ip 127.0.0.1 --infer-origin-from-routes=false ` +
-        `--var GITHUB_PUBLICATION_TOKEN:jeton-de-test --var GITHUB_API_URL:${FAUX_GITHUB}`,
+        `--var GITHUB_PUBLICATION_TOKEN:jeton-de-test --var GITHUB_API_URL:${FAUX_GITHUB} ` +
+        `--var MAILJET_API_KEY:cle-de-test --var MAILJET_API_SECRET:secret-de-test --var MAILJET_API_URL:${FAUX_MAILJET}`,
       url: `http://127.0.0.1:${PORT}/`,
       timeout: 300_000, // build Next + OpenNext + démarrage de workerd
       reuseExistingServer: false,
