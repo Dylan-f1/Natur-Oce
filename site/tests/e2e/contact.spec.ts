@@ -58,12 +58,14 @@ test.describe("Demande de séance", () => {
     expect(texte).toContain("Bonjour, je prépare un semi-marathon.");
   });
 
-  test("aucune donnée du visiteur n'est gardée : seule une empreinte de l'IP, sans adresse ni texte (RSE-04)", async ({ request }) => {
+  test("aucune donnée du visiteur n'est gardée : seulement des empreintes (IP, compteur du jour des accusés), sans adresse ni texte (RSE-04)", async ({ request }) => {
     expect((await envoiDirect(request, "Léa")).status()).toBe(200);
     const lignes = lignesLocales<{ cle: string }>("SELECT cle FROM limite");
-    expect(lignes).toHaveLength(1);
-    expect(lignes[0].cle).toMatch(/^[0-9a-f]{64}$/); // HMAC-SHA-256
-    expect(lignes[0].cle).not.toMatch(/127\.0\.0\.1|lea@|Bonjour/);
+    expect(lignes).toHaveLength(2); // limite par IP + plafond quotidien des accusés de réception (T20)
+    for (const { cle } of lignes) {
+      expect(cle).toMatch(/^[0-9a-f]{64}$/); // HMAC-SHA-256
+      expect(cle).not.toMatch(/127\.0\.0\.1|lea@|Bonjour/);
+    }
   });
 
   test("champs vides ou adresse invalide → chaque champ fautif est signalé, la saisie est conservée, rien ne part", async ({ page }) => {
