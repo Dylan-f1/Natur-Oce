@@ -45,7 +45,9 @@ export default defineConfig({
         // (première route de wrangler.jsonc), et les liens de connexion pointeraient vers le site en ligne.
         `npx wrangler dev --port ${PORT} --ip 127.0.0.1 --infer-origin-from-routes=false ` +
         `--var GITHUB_PUBLICATION_TOKEN:jeton-de-test --var GITHUB_API_URL:${FAUX_GITHUB} ` +
-        `--var MAILJET_API_KEY:cle-de-test --var MAILJET_API_SECRET:secret-de-test --var MAILJET_API_URL:${FAUX_MAILJET}`,
+        `--var MAILJET_API_KEY:cle-de-test --var MAILJET_API_SECRET:secret-de-test --var MAILJET_API_URL:${FAUX_MAILJET} ` +
+        // E-mails d'Océane par le binding local (lus par outils/emails) ; leur passage par Mailjet est testé en unitaire.
+        `--var EMAILS_OCEANE:cloudflare`,
       url: `http://127.0.0.1:${PORT}/`,
       timeout: 300_000, // build Next + OpenNext + démarrage de workerd
       reuseExistingServer: false,

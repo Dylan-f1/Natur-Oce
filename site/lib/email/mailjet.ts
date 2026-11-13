@@ -28,21 +28,41 @@ export function lireConfigMailjet(variables: Record<string, unknown>): ConfigMai
   return { cle, secret, api };
 }
 
-export type MessageClient = { destinataire: { email: string; nom?: string }; sujet: string; texte: string; html: string };
+export type MessageClient = {
+  destinataire: { email: string; nom?: string };
+  sujet: string;
+  texte: string;
+  html: string;
+  /** Par défaut : Océane — Natur’Océ <contact@natur-oce.fr> (expéditeur validé chez Mailjet). */
+  expediteur?: { email: string; name: string };
+  /** Par défaut : contact@natur-oce.fr. Pour Océane : l'adresse du visiteur. */
+  repondreA?: string;
+  piecesJointes?: { filename: string; type: string; content: string }[];
+};
+
+/** Texte (UTF-8) → base64, pour les pièces jointes Mailjet. */
+function base64Utf8(texte: string): string {
+  let binaire = "";
+  for (const o of new TextEncoder().encode(texte)) binaire += String.fromCharCode(o);
+  return btoa(binaire);
+}
 
 /** Corps de `POST /v3.1/send` : un message, réponse vers contact@, suivi des ouvertures et clics coupé. */
 export function corpsMailjet(m: MessageClient) {
   return {
     Messages: [
       {
-        From: { Email: EXPEDITEUR_CLIENT.email, Name: EXPEDITEUR_CLIENT.name },
+        From: { Email: (m.expediteur ?? EXPEDITEUR_CLIENT).email, Name: (m.expediteur ?? EXPEDITEUR_CLIENT).name },
         To: [{ Email: m.destinataire.email, ...(m.destinataire.nom ? { Name: m.destinataire.nom } : {}) }],
-        ReplyTo: { Email: EXPEDITEUR_CLIENT.email, Name: EXPEDITEUR_CLIENT.name },
+        ReplyTo: m.repondreA ? { Email: m.repondreA } : { Email: EXPEDITEUR_CLIENT.email, Name: EXPEDITEUR_CLIENT.name },
         Subject: m.sujet,
         TextPart: m.texte,
         HTMLPart: m.html,
         TrackOpens: "disabled",
         TrackClicks: "disabled",
+        ...(m.piecesJointes?.length
+          ? { Attachments: m.piecesJointes.map((a) => ({ ContentType: a.type, Filename: a.filename, Base64Content: base64Utf8(a.content) })) }
+          : {}),
       },
     ],
   };
