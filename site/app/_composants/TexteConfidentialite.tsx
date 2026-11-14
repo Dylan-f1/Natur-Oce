@@ -33,6 +33,12 @@ export function TexteConfidentialite({ titres = "h2" }: { titres?: "h2" | "h3" }
         prénom et le créneau choisi, jamais votre message.
       </p>
       <p>
+        L’e-mail envoyé à Océane contient un lien pour confirmer votre rendez-vous en un clic. Ce lien
+        renferme votre demande (prénom, adresse, créneau), chiffrée, et cesse de fonctionner au bout de
+        sept jours. Quand Océane confirme, vous recevez un second e-mail avec la date, l’heure, le lien de
+        la visio et un fichier pour votre agenda.
+      </p>
+      <p>
         N’écrivez pas d’informations sur votre santé dans le formulaire : vous en parlerez pendant la
         séance.
       </p>
@@ -65,8 +71,9 @@ export function TexteConfidentialite({ titres = "h2" }: { titres?: "h2" | "h3" }
           <strong>Microsoft</strong> (Outlook) fournit la messagerie où Océane reçoit vos demandes.
         </li>
         <li>
-          <strong>Mailjet</strong> envoie l’e-mail de confirmation de réception : il reçoit votre adresse,
-          votre prénom et le créneau choisi, seulement pour cet envoi. Le suivi des ouvertures et des
+          <strong>Mailjet</strong> envoie l’e-mail de confirmation de réception, puis celui de confirmation
+          du rendez-vous : il reçoit votre adresse, votre prénom, le créneau choisi et, pour la
+          confirmation, le lien de la visio, seulement pour ces envois. Le suivi des ouvertures et des
           clics est désactivé.
         </li>
       </ul>
@@ -95,7 +102,7 @@ export function TexteConfidentialite({ titres = "h2" }: { titres?: "h2" | "h3" }
         <a href="https://www.cnil.fr/fr/plaintes" rel="noopener">cnil.fr</a>.
       </p>
 
-      <p className="mise-a-jour">Mise à jour le 13 novembre 2026.</p>
+      <p className="mise-a-jour">Mise à jour le 14 novembre 2026.</p>
     </div>
   );
 }
