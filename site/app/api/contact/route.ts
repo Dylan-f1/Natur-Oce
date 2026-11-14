@@ -1,7 +1,10 @@
 import { origineDesEntetes } from "@/lib/auth";
+import { env } from "@/lib/cloudflare";
 import { LIMITE_ENVOIS, TAILLE_MAX_DEMANDE, validerDemande, type ErreursContact } from "@/lib/contact";
 import { envoyerAOceane } from "@/lib/email";
 import { envoyerAccuse } from "@/lib/email/client";
+import { lireConfigMailjet } from "@/lib/email/mailjet";
+import { creerJeton } from "@/lib/rendezvous";
 import { modeleDemandeSeance } from "@/lib/email/modeles";
 import { cleLimite, compterTentative, ipDuVisiteur } from "@/lib/limite";
 
@@ -68,8 +71,22 @@ export async function POST(requete: Request): Promise<Response> {
   );
   if (!sousLaLimite) return repondre(429, { ok: false, general: TROP });
 
+  // Lien chiffré « Confirmer ce créneau » (T21) : seulement avec un créneau, et si Mailjet est branché
+  // (sinon la page ne pourrait rien envoyer). Un échec ici garde le bouton de réponse pré-écrite.
+  let lienConfirmation: string | undefined;
   try {
-    await envoyerAOceane(modeleDemandeSeance(verdict.demande));
+    const variables = await env();
+    const { demande } = verdict;
+    if (demande.creneau && lireConfigMailjet(variables as unknown as Record<string, unknown>)) {
+      const jeton = await creerJeton({ prenom: demande.prenom, email: demande.email, ...demande.creneau }, variables.BETTER_AUTH_SECRET);
+      lienConfirmation = `${origine}/rendez-vous/confirmer?j=${jeton}`;
+    }
+  } catch (erreur) {
+    console.error("[contact] lien de confirmation impossible", erreur);
+  }
+
+  try {
+    await envoyerAOceane(modeleDemandeSeance({ ...verdict.demande, lienConfirmation }));
   } catch {
     return repondre(502, { ok: false, general: ECHEC_ENVOI }); // déjà journalisé par lib/email
   }

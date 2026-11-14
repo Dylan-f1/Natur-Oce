@@ -3,7 +3,18 @@ export const FAUX_MAILJET = "http://127.0.0.1:8797";
 
 export type EnvoiMailjet = {
   autorisation: string | null;
-  corps: { Messages: { From: { Email: string }; To: { Email: string; Name?: string }[]; ReplyTo: { Email: string }; Subject: string; TextPart: string; HTMLPart: string; TrackOpens: string }[] };
+  corps: {
+    Messages: {
+      From: { Email: string };
+      To: { Email: string; Name?: string }[];
+      ReplyTo: { Email: string };
+      Subject: string;
+      TextPart: string;
+      HTMLPart: string;
+      TrackOpens: string;
+      Attachments?: { Filename: string; ContentType: string; Base64Content: string }[];
+    }[];
+  };
 };
 
 export async function envoisMailjet(): Promise<EnvoiMailjet[]> {

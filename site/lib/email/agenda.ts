@@ -46,7 +46,7 @@ function replier(ligne: string): string {
   return morceaux.join("\r\n ");
 }
 
-export type Rendezvous = { jour: string; heure: string; dureeMinutes: number; titre: string; description: string; uid: string; maintenant?: number };
+export type Rendezvous = { jour: string; heure: string; dureeMinutes: number; titre: string; description: string; uid: string; maintenant?: number; lieu?: string; url?: string };
 
 export function fichierAgenda(r: Rendezvous): string {
   const debut = parisVersUtc(r.jour, r.heure);
@@ -63,6 +63,8 @@ export function fichierAgenda(r: Rendezvous): string {
     `DTEND:${horodatage(debut + r.dureeMinutes * 60_000)}`,
     `SUMMARY:${echapperIcs(r.titre)}`,
     `DESCRIPTION:${echapperIcs(r.description)}`,
+    ...(r.lieu ? [`LOCATION:${echapperIcs(r.lieu)}`] : []),
+    ...(r.url ? [`URL:${r.url}`] : []),
     "END:VEVENT",
     "END:VCALENDAR",
   ];

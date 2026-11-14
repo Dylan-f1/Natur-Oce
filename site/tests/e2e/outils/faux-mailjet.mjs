@@ -19,7 +19,8 @@ function lireCorps(requete) {
 }
 
 function json(reponse, code, valeur) {
-  reponse.writeHead(code, { "Content-Type": "application/json" });
+  // Une connexion par réponse : un client qui réutilise une connexion que le serveur vient de fermer (5 s d'inactivité) recevrait ECONNRESET.
+  reponse.writeHead(code, { "Content-Type": "application/json", Connection: "close" });
   reponse.end(JSON.stringify(valeur));
 }
 

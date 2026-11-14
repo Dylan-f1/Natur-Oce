@@ -15,6 +15,16 @@ export const tarif = sqliteTable("tarif", {
 export type Tarif = typeof tarif.$inferSelect;
 
 /**
+ * Réglages d'Océane, jamais publics (T21, specs/SPEC-emails-client.md) : `lien_visio` (son lien de
+ * visio permanent) et `duree_minutes` (durée d'une séance). Validation dans lib/reglages.ts.
+ */
+export const reglage = sqliteTable("reglage", {
+  cle: text("cle").primaryKey(),
+  valeur: text("valeur").notNull(),
+  modifieLe: integer("modifie_le").notNull(),
+});
+
+/**
  * Sections ajoutées par Océane à l'accueil (specs/SPEC-edition-visuelle.md, EF-21, D-24).
  * `apres` = clé de la section d'origine qu'elle suit ; `ordre` = rang parmi celles qui la suivent.
  * Texte brut seulement (limites dans lib/sections.ts).
