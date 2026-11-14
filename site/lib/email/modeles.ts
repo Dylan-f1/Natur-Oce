@@ -124,6 +124,8 @@ export type DemandeSeance = {
   /** Le même créneau, en valeurs de champs (« 2026-11-18 », « 18:30 ») : sert au fichier d'agenda. */
   creneau?: { jour: string; heure: string };
   message: string;
+  /** Lien chiffré qui ouvre la page « Confirmer le rendez-vous » (T21) ; sans lui, une réponse pré-écrite. */
+  lienConfirmation?: string;
 };
 
 /** Lien `mailto:` qui ouvre une réponse déjà écrite dans la messagerie d'Océane. */
@@ -154,9 +156,12 @@ export function modeleDemandeSeance(d: DemandeSeance): MessageOceane {
   const dispo = d.disponibilites?.trim() || "non précisées";
   const valide = adresseValide(d.email);
   const reponses = reponsesProposees(d);
+  const lienConfirme = d.lienConfirmation && /^https?:\/\//.test(d.lienConfirmation) ? d.lienConfirmation : null;
   const boutons = valide
     ? [
-        reponses.confirmer && bouton("Confirmer ce créneau", lienReponse(d.email, reponses.confirmer.sujet, reponses.confirmer.corps)),
+        lienConfirme
+          ? bouton("Confirmer ce créneau", lienConfirme)
+          : reponses.confirmer && bouton("Confirmer ce créneau", lienReponse(d.email, reponses.confirmer.sujet, reponses.confirmer.corps)),
         bouton(reponses.confirmer ? "Proposer un autre créneau" : "Proposer un créneau", lienReponse(d.email, reponses.autre.sujet, reponses.autre.corps), !reponses.confirmer),
       ].filter(Boolean).join("")
     : "";
@@ -183,20 +188,21 @@ export function modeleDemandeSeance(d: DemandeSeance): MessageOceane {
       d.message,
       "",
       "Répondez directement à ce message pour lui écrire.",
+      ...(lienConfirme ? ["", `Confirmer ce créneau en un clic (lien valable 7 jours) : ${lienConfirme}`] : []),
       ...(agenda ? ["", "Le créneau est joint en fichier d’agenda (seance.ics)."] : []),
       "",
       PIED,
     ].join("\n"),
     html: gabarit(
       `Nouvelle demande de séance — ${d.prenom}`,
-      `<p style="margin:0 0 12px">${echapperHtml(d.prenom)} souhaite une séance. ${boutons ? "Répondez en un clic : votre réponse s’ouvre déjà écrite, à relire et compléter avant d’envoyer." : ""}</p>
+      `<p style="margin:0 0 12px">${echapperHtml(d.prenom)} souhaite une séance. ${lienConfirme ? "Confirmez en un clic : le site envoie à " + echapperHtml(d.prenom) + " la confirmation avec votre lien de visio. Vous pouvez aussi répondre vous-même." : boutons ? "Répondez en un clic : votre réponse s’ouvre déjà écrite, à relire et compléter avant d’envoyer." : ""}</p>
 ${infos([
   ["De", `${echapperHtml(d.prenom)} · ${echapperHtml(d.email)}`],
   ["Disponibilités", echapperHtml(dispo)],
   ["Message", `<span style="white-space:pre-wrap">${echapperHtml(d.message)}</span>`],
 ])}
 ${boutons ? `<div style="margin:0 0 8px">${boutons}</div>` : ""}
-<p style="margin:8px 0 0;font-size:14px;color:${C.gris}">Vous pouvez aussi répondre directement à ce message.${agenda ? " Le créneau est joint en fichier d’agenda : ouvrez-le pour l’ajouter à votre calendrier." : ""}</p>`,
+<p style="margin:8px 0 0;font-size:14px;color:${C.gris}">${lienConfirme ? "« Confirmer » ouvre une page du site : un clic, et la confirmation part (lien valable 7 jours). " : ""}Vous pouvez aussi répondre directement à ce message.${agenda ? " Le créneau est joint en fichier d’agenda : ouvrez-le pour l’ajouter à votre calendrier." : ""}</p>`,
     ),
     ...(agenda ? { piecesJointes: [{ filename: "seance.ics", type: "text/calendar", content: agenda }] } : {}),
   };
@@ -245,6 +251,69 @@ export function modeleAccuseReception(d: Pick<DemandeSeance, "prenom" | "disponi
 <p style="margin:0 0 12px">Merci pour votre message. Votre demande de séance en visio est bien reçue : je vous réponds sous 48 heures pour confirmer le rendez-vous.</p>
 ${creneau ? infos([["Créneau demandé", echapperHtml(creneau)]]) : ""}
 <p style="margin:0 0 12px;font-size:14px;color:${C.gris}">Pour ajouter quelque chose, répondez simplement à ce message.</p>
+<p style="margin:20px 0 0">À bientôt,<br><strong>Océane</strong></p>
+<p style="margin:20px 0 0;font-size:13px;line-height:1.5;color:${C.discret};font-style:italic">${AVERT_CLIENT}</p>`,
+      PIED_CLIENT,
+    ),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Confirmation du rendez-vous (T21) : envoyée au visiteur quand Océane clique « Confirmer ».
+
+export type ConfirmationRdv = { prenom: string; jour: string; heure: string; dureeMinutes: number; lienVisio: string };
+
+const fmtJour = new Intl.DateTimeFormat("fr-FR", { weekday: "long", timeZone: "UTC" });
+const fmtMois = new Intl.DateTimeFormat("fr-FR", { month: "short", timeZone: "UTC" });
+
+/** « 90 » → « 1 h 30 », « 60 » → « 1 h », « 45 » → « 45 min ». */
+export function dureeEnLettres(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, "0")}`;
+}
+
+/** E-mail « Votre séance est confirmée » (Bandeau olive) ; le fichier d'agenda est joint par l'appelant. */
+export function modeleConfirmationRdv(c: ConfirmationRdv, creneauEnLettres: string): { sujet: string; texte: string; html: string } {
+  const prenom = prenomSur(c.prenom);
+  const bonjour = prenom ? `Bonjour ${prenom},` : "Bonjour,";
+  const midi = new Date(`${c.jour}T12:00:00Z`);
+  const [h, mn] = c.heure.split(":");
+  const heure = `${Number(h)} h${mn === "00" ? "" : ` ${mn}`}`;
+  const duree = dureeEnLettres(c.dureeMinutes);
+  const date = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:8px 0 20px"><tr>
+<td width="104" style="width:104px;background:${C.olive};color:${C.papier};text-align:center;padding:14px 8px;vertical-align:middle"><div style="font-size:13px;letter-spacing:1px">${echapperHtml(fmtMois.format(midi).toUpperCase())}</div><div style="font-size:48px;line-height:1">${midi.getUTCDate()}</div><div style="font-size:14px;margin-top:4px">${echapperHtml(fmtJour.format(midi))}</div></td>
+<td style="padding:12px 16px;vertical-align:middle;background:${C.feuille}"><div style="font-size:22px;color:${C.olive}">${echapperHtml(heure)}</div><div style="font-size:15px;color:${C.discret}">Séance en visio · ${echapperHtml(duree)}</div></td></tr></table>`;
+  return {
+    sujet: `Votre séance est confirmée — ${creneauEnLettres}`,
+    texte: [
+      bonjour,
+      "",
+      "C’est noté, je vous retrouve en visio. Prévoyez un endroit calme et une connexion stable.",
+      "",
+      `Date : ${creneauEnLettres}`,
+      `Durée : ${duree}`,
+      `Lien de la visio : ${c.lienVisio}`,
+      "",
+      "Le rendez-vous est joint en fichier d’agenda (seance.ics).",
+      "Un empêchement ? Répondez à ce message au moins 24 heures avant, et nous trouverons un autre créneau.",
+      "",
+      "À bientôt,",
+      "Océane",
+      "",
+      AVERT_CLIENT,
+      "",
+      PIED_CLIENT,
+    ].join("\n"),
+    html: gabarit(
+      "Votre séance est confirmée",
+      `<p style="margin:0 0 12px">${echapperHtml(bonjour)}</p>
+<p style="margin:0 0 12px">C’est noté, je vous retrouve en visio. Prévoyez un endroit calme et une connexion stable : le bouton ci-dessous ouvre la séance.</p>
+${date}
+<div>${bouton("Rejoindre la visio", c.lienVisio)}</div>
+<p style="margin:8px 0 12px;font-size:14px;color:${C.gris}">Le rendez-vous est joint en fichier d’agenda (seance.ics) : ouvrez-le pour l’ajouter à votre calendrier.</p>
+<p style="margin:0 0 12px;font-size:14px;color:${C.gris}">Un empêchement ? Répondez à ce message au moins 24 heures avant, et nous trouverons un autre créneau.</p>
 <p style="margin:20px 0 0">À bientôt,<br><strong>Océane</strong></p>
 <p style="margin:20px 0 0;font-size:13px;line-height:1.5;color:${C.discret};font-style:italic">${AVERT_CLIENT}</p>`,
       PIED_CLIENT,

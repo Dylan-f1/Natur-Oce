@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   adresseValide,
   echapperHtml,
+  modeleConfirmationRdv,
   modeleDemandeSeance,
   modeleLienConnexion,
   nettoyerSujet,
@@ -138,3 +139,55 @@ describe("e-mails « Bandeau olive » et réponses en un clic (13/11)", () => {
   });
 });
 
+
+describe("confirmation du rendez-vous (T21)", () => {
+  const demande = {
+    prenom: "Léa",
+    email: "lea@exemple.test",
+    disponibilites: "mercredi 18 novembre 2026 à 18 h 30",
+    creneau: { jour: "2026-11-18", heure: "18:30" },
+    message: "Bonjour.",
+  };
+
+  it("avec le lien chiffré : « Confirmer » pointe vers la page, « Proposer un autre créneau » reste un mailto", () => {
+    const m = modeleDemandeSeance({ ...demande, lienConfirmation: "https://natur-oce.fr/rendez-vous/confirmer?j=v1.abc" });
+    expect(m.html).toContain('href="https://natur-oce.fr/rendez-vous/confirmer?j=v1.abc"');
+    expect([...m.html.matchAll(/href="mailto:/g)]).toHaveLength(1);
+    expect(m.html).toContain("Proposer un autre créneau");
+    expect(m.texte).toContain("Confirmer ce créneau en un clic (lien valable 7 jours) : https://natur-oce.fr/rendez-vous/confirmer?j=v1.abc");
+  });
+
+  it("un lien qui n'est pas une adresse web est ignoré (retour à la réponse pré-écrite)", () => {
+    const m = modeleDemandeSeance({ ...demande, lienConfirmation: "javascript:alert(1)" });
+    expect(m.html).not.toContain("javascript:");
+    expect([...m.html.matchAll(/href="mailto:/g)]).toHaveLength(2);
+  });
+
+  it("e-mail du client : Bandeau olive, date en grand, bouton visio, durée, sans message recopié", () => {
+    const m = modeleConfirmationRdv(
+      { prenom: "Léa", jour: "2026-11-18", heure: "18:30", dureeMinutes: 90, lienVisio: "https://meet.google.com/abc-defg-hij" },
+      "mercredi 18 novembre 2026 à 18 h 30",
+    );
+    expect(m.sujet).toBe("Votre séance est confirmée — mercredi 18 novembre 2026 à 18 h 30");
+    expect(m.html).toContain("background:#3D491B");
+    expect(m.html).toContain('href="https://meet.google.com/abc-defg-hij"');
+    expect(m.html).toContain("Rejoindre la visio");
+    expect(m.html).toContain("18 h 30");
+    expect(m.html).toContain("1 h 30");
+    expect(m.html).toContain(">18<"); // le jour du mois, en grand
+    expect(m.html).toContain("mercredi");
+    expect(m.texte.startsWith("Bonjour Léa,")).toBe(true);
+    expect(m.texte).toContain("Lien de la visio : https://meet.google.com/abc-defg-hij");
+    expect(m.texte).toContain("ne remplace pas un avis médical");
+  });
+
+  it("prénom douteux : « Bonjour, » ; lien de visio échappé dans le HTML", () => {
+    const m = modeleConfirmationRdv(
+      { prenom: "<script>", jour: "2026-12-05", heure: "09:00", dureeMinutes: 60, lienVisio: 'https://exemple.fr/a?b=1&c="2"' },
+      "samedi 5 décembre 2026 à 9 h",
+    );
+    expect(m.texte.startsWith("Bonjour,")).toBe(true);
+    expect(m.html).not.toContain("<script>");
+    expect(m.html).toContain("&amp;c=&quot;2&quot;");
+  });
+});

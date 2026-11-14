@@ -1,0 +1,16 @@
+/* Page « Confirmer un rendez-vous » (T21) : tokens de globals.css (direction L'herbier). */
+.page-confirmer { padding-block: 1rem clamp(3rem, 8vw, 5rem); }
+.entete-confirmer { display: flex; align-items: center; gap: .8rem; padding-block: 1rem 1.5rem; }
+.entete-confirmer img { border-radius: 50%; }
+.entete-confirmer span { font: 400 1.25rem/1 var(--titre); color: var(--olive-fonce); }
+.page-confirmer h1 { font: 400 clamp(1.9rem, 4vw, 2.8rem)/1.1 var(--titre); color: var(--olive-fonce); margin: .5rem 0 .75rem; max-width: 22ch; }
+.page-confirmer .chapeau { font-size: 1.15rem; max-width: 46ch; margin: 0 0 1.5rem; }
+.page-confirmer .etiquette { background: var(--etiquette); border: 1px solid #CFC3A8; padding: 1rem 1.25rem 1.1rem; max-width: 32rem; margin: 0 0 1.75rem; }
+.page-confirmer .etiquette dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .2rem 1.25rem; align-items: baseline; }
+.page-confirmer .etiquette dt { font: italic 400 .95rem/1.5 var(--texte); color: var(--or-texte); }
+.page-confirmer .etiquette dd { margin: 0; font: 400 1.15rem/1.6 var(--titre); color: var(--olive-fonce); overflow-wrap: anywhere; }
+.page-confirmer .bouton { border: 0; cursor: pointer; }
+.page-confirmer .aide { font-size: .95rem; color: #5C6448; max-width: 52ch; margin: 1rem 0 0; }
+.avis { border-left: 4px solid var(--olive); background: var(--feuille); padding: 1rem 1.2rem; max-width: 50ch; margin: 0 0 1.5rem; }
+.avis p { margin: 0; }
+.avis-erreur { border-left-color: #9B3D1E; }
